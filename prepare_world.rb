@@ -61,7 +61,7 @@ chunks.each do |cx,cz|
     world[x,z,amin-1]=MCWorld::Block::Bedrock
   end
   apos.each do |x,z|
-    world[x,z,cmin+size+offset]=void_block
+    world[x,z,cmin+size+offset-1]=void_block
   end
   fill = ->(x,z){
     air_flag = true

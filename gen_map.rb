@@ -14,7 +14,10 @@ def image world
   size.times.to_a.repeated_permutation(2) do |x,z|
     p x if z==0
     zmax = world.chunk(x/16,z/16).instance_eval{@blocks}.size
-    y = world[x,z,0] ? zmax.times.reverse_each.find{|y|world[x,z,y]} : 0
+    y = world[x,z,0] ? zmax.times.reverse_each.find{|y|
+      b = world[x,z,y]
+      b&&b.id!=217
+    } : 0
     block = world[x,z,y]
     if block&.type == MCWorld::Block::StillWater || block&.type == MCWorld::Block::FlowingWater
       y2 = y.times.reverse_each.find{|y|
@@ -52,4 +55,5 @@ def image world
   img2.save('mcheight.png')
 end
 
-image load_world 'spigot/world/region/r.0.0_original.mca'
+# image load_world 'spigot/world/region/r.0.0_original.mca'
+image load_world 'spigot/world/region/r.0.0.mca'
