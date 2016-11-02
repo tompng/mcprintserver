@@ -1,20 +1,16 @@
 require_relative 'mc_world/world'
 
-class WorldView
-  def initialize
-    world = MCWorld::World.new file: file
+class STLExtract
+  def initialize file
+    @world = MCWorld::World.new file: file
   end
-  world = MCWorld::World.new file: file
-  table = {}
-  set = ->(x,y,z){table[((x&0xff)<<16)|((y&0xff)<<8)|(z&0xff)]=true}
-  get = ->(x,y,z){table[((x&0xff)<<16)|((y&0xff)<<8)|(z&0xff)]}
-  x0, y0 = 128, 256
-  128.times{|x|128.times{|y|128.times{|z|set[x,z,y] if world[x0+x,y0+y,z]}}}
 
   def stl name='shape'
-    puts "solid #{name}"
+    @output = []
+    @output << "solid #{name}"
     yield
-    puts "endsolid #{name}"
+    @output << "endsolid #{name}"
+    @output.join "\n"
   end
   def face pos, dir
     val, axis = dir.each.with_index.find{ |val, axis| val.nonzero? }
@@ -29,7 +25,7 @@ class WorldView
     p11[ (axis+2) % 3] = +1
     p10, p01 = p01, p10 if val < 0
     vertex = ->(p){pos.zip(p).map{|ps,p|ps+(1+p)/2}.join ' '}
-    puts %(
+    @output << %(
       facet normal #{dir.join ' '}
         outer loop
           vertex #{vertex[p00]}
@@ -47,12 +43,28 @@ class WorldView
     )
   end
 
-  stl 'applepen' do
-    128.times{|x|128.times{|y|128.times{|z|
-      next unless get[x,y,z]
-      [[-1,0,0],[1,0,0],[0,-1,0],[0,1,0],[0,0,-1],[0,0,1]].each{|dx,dy,dz|
-        face [x,y,z], [dx,dy,dz] unless get[x+dx,y+dy,z+dz]
+  def extract xmin,ymin,zmin,xmax,ymax,zmax
+    table = {}
+    set = ->(x,y,z){table[(((x-xmin)&0xff)<<16)|(((y-ymin)&0xff)<<8)|((z-zmin)&0xff)]=true}
+    get = ->(x,y,z){table[(((x-xmin)&0xff)<<16)|(((y-ymin)&0xff)<<8)|((z-zmin)&0xff)]}
+    (xmin..xmax).each{|x|
+      (ymin..ymax).each{|y|
+        (zmin..zmax).each{|z|
+          set[x,y,z] if @world[x,z,y]
+        }
       }
-    }}}
+    }
+    stl 'mc' do
+      (xmin..xmax).each{|x|
+        (ymin..ymax).each{|y|
+          (zmin..zmax).each{|z|
+            next unless get[x,y,z]
+            [[-1,0,0],[1,0,0],[0,-1,0],[0,1,0],[0,0,-1],[0,0,1]].each{|dx,dy,dz|
+              face [x-(xmin+xmax)/2,y-(ymin+ymax)/2,z-(zmin+zmax)/2], [dx,dy,dz] unless get[x+dx,y+dy,z+dz]
+            }
+          }
+        }
+      }
+    end
   end
 end

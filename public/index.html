@@ -1,0 +1,126 @@
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+<script>
+
+var userList = []
+$(function(){
+  $.get('/user_list', function(data){
+    userList = data
+    init();
+  })
+  setInterval(function(){
+    $.get('/user_list', function(data){userList = data;render();})
+  }, 30*1000)
+})
+var currentArea=null;
+function init(){
+  for(var key in userList){
+    var users = userList[key]
+    var xz=key.split('_')
+    var x=parseInt(xz[0]), z=parseInt(xz[1])
+    var d=$('<div id='+key+'>');
+    d.css({left: 16*x, top: 16*z})
+    d.appendTo('#map');
+    d.click(function(){show($(this).attr('id'))})
+  }
+  $('form').submit(function(){
+    addUser(currentArea, $('input[type=text]').val())
+    createUserElement(currentArea, $('input[type=text]').val())
+    return false;
+  })
+  $('#teleport').click(function(){
+    userList[currentArea].forEach(function(user){
+      $.post('/tp', {user_id: user, area_id: currentArea})
+    })
+  })
+  render();
+}
+function createUserElement(key, name){
+  var el = $('<div><span></span><a class=remove>&times;</a></div>')
+  el.find('span').text(name)
+  el.find('a').click(function(){
+    userList[key]=userList[key].filter(function(n){return n!=name})
+    el.remove()
+    removeUser(key, name)
+  })
+  el.appendTo('.area-users')
+}
+function addUser(key, user){
+  $.post('/user_list_add', {area_id: key, user_id: user}, function(data){
+    userList = data
+    render()
+  })
+}
+function removeUser(key, user){
+  $.post('/user_list_remove', {area_id: key, user_id: user}, function(data){
+    userList = data
+    render()
+  })
+}
+function show(key){
+  $('.selected').removeClass('selected');
+  $('#'+key).addClass('selected');
+  currentArea = key
+  $('.area-name').text('Area-'+key.split('_').join('-'))
+  $('.area-users').empty()
+  userList[key].forEach(function(name){
+    createUserElement(key, name)
+  })
+  $('.preview').attr({href: '/stl_viewer.html?area_id='+key})
+  $('.area-info').show()
+}
+function render(){
+  if(currentArea)show(currentArea)
+  for(var key in userList){
+    if(userList[key].length){
+      $('#'+key).addClass('owned')
+    }else{
+      $('#'+key).removeClass('owned')
+    }
+  }
+}
+</script>
+<style>
+#map{
+  position: fixed;
+  left:0;top:0;
+  width: 512;height:512;
+  background: url(mcheight.png);
+  background-size:cover;
+}
+#map div{
+  position:absolute;
+  background: blue;
+  width: 16px;height: 16px;
+  opacity: 0.2;
+}
+#map div:hover{
+  opacity: 0.5;
+}
+#map div.owned{
+  background: red;
+}
+#map div.selected{
+  box-sizing: border-box;
+  opacity: 1;
+}
+#area{
+  position:fixed;
+  left:512;right:0;
+  top:0;
+  height:512;
+  overflow-x:hidden;overflow-y:auto;
+  background:silver;
+}
+</style>
+<div id='map'></div>
+<div id='area'>
+  <div class='area-info' style='display:none'>
+    <div class='area-header'>
+      <span class='area-name'></span>
+      <a class='preview' target='preview'>preview</a>
+    </div>
+    <form><input type=text><input type=submit value='add'></form>
+    <a id='teleport'>teleport</a>
+    <div class='area-users'></div>
+  </div>
+</div>

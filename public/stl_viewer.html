@@ -1,0 +1,63 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r79/three.js'></script>
+<script src="stl_loader.js"></script>
+<style>body{margin:0;padding:0;}</style>
+<script>
+var container;
+var camera, cameraTarget, scene, renderer;
+onload=function(){
+	init();
+	animate();
+}
+function init() {
+	var matches=location.search.match(/area_id=\d+_\d+/)
+	var url = '/stl?'+matches[0]
+	container = document.createElement( 'div' );
+	document.body.appendChild( container );
+	camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 15 );
+	camera.position.set( 3, 0.15, 3 );
+	cameraTarget = new THREE.Vector3( 0, -0.25, 0 );
+	scene = new THREE.Scene();
+	scene.fog = new THREE.Fog( 0x72645b, 2, 15 );
+	var loader = new THREE.STLLoader();
+	loader.load( url, function ( geometry ) {
+		var material = new THREE.MeshPhongMaterial( { color: 0xff5533, specular: 0x111111, shininess: 200 } );
+		var mesh = new THREE.Mesh( geometry, material );
+		mesh.scale.set( 0.1, 0.1, 0.1 );
+		scene.add( mesh );
+	} );
+	scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
+	addLight( 1, 1, 1, 0xffffff, 1.35 );
+	addLight( 0.5, 1, -1, 0xffaa00, 1 );
+	// renderer
+	renderer = new THREE.WebGLRenderer( { antialias: true } );
+	renderer.setClearColor( scene.fog.color );
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.gammaInput = true;
+	renderer.gammaOutput = true;
+	container.appendChild( renderer.domElement );
+	window.addEventListener( 'resize', onWindowResize, false );
+}
+function addLight( x, y, z, color, intensity ) {
+	var directionalLight = new THREE.DirectionalLight( color, intensity );
+	directionalLight.position.set( x, y, z );
+	scene.add( directionalLight );
+}
+function onWindowResize() {
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize( window.innerWidth, window.innerHeight );
+}
+function animate() {
+	requestAnimationFrame( animate );
+	render();
+}
+function render() {
+	var timer = Date.now() * 0.0005;
+	camera.position.x = Math.cos( timer ) * 3;
+	camera.position.z = Math.sin( timer ) * 3;
+	camera.lookAt( cameraTarget );
+	renderer.render( scene, camera );
+}
+</script>

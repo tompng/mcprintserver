@@ -2,28 +2,63 @@
 #worldedit worldguard入れる
 require 'pry'
 require 'json'
+require 'sinatra'
 require 'yaml'
-
+require './stl_extract'
 class Regions
   def initialize
     @areas = JSON.parse File.read('areas.json')
+    @area_users = {}
+    @areas.each do |area|
+      cx = area['print']['min']['x']/16
+      cz = area['print']['min']['z']/16
+      @area_users["#{cx}_#{cz}"]=[]
+    end
   end
 
-  def register area_users
-    @area_users = area_users
+  def areas_by_user user
+    @area_users.select{|name, users| users.include? user}.keys.map{|key|area key}
   end
 
-  def area_regions index
-    area = @areas[index]
+  def area id
+    @areas.find do |area|
+      "#{area['print']['min']['x']/16}_#{area['print']['min']['z']/16}" == id
+    end
+  end
+
+  def area_users
+    @area_users
+  end
+
+  def register key, users
+    @area_users[key] = users if @area_users[key]
+  end
+
+  def area_position id
+    area = area id
+    return unless area
+    min = area['print']['min']
+    max = area['print']['max']
+    {
+      x: (min['x']+max['x'])/2,
+      z: (min['z']+max['z'])/2,
+      y: max['y']+10
+    }
+  end
+
+  def area_regions area
     cx = area['print']['min']['x']/16
     cz = area['print']['min']['z']/16
     name = "area_#{cx}_#{cz}"
     regions = {}
+    players = @area_users["#{cx}_#{cz}"]
+    message = "Area-#{cx}-#{cz}"
+    message += " (#{players.join ', '})" unless players.empty?
     regions[name] = region(
       min: area['area']['min'],
       max: area['area']['max'],
-      members: {players: [:tompng]},
-      flags: {greeting: "Welcome to Area-#{cx}-#{cz}"},
+      members: {players: players},
+      flags: {greeting: message},
       priority: 1
     )
     area_y = area['area']['min']['y']
@@ -60,8 +95,8 @@ class Regions
 
   def save
     regions = {}
-    @areas.each.with_index do |_, i|
-      regions.merge! area_regions(i)
+    @areas.each do |area|
+      regions.merge! area_regions(area)
     end
     regions.merge! default_regions
     File.write 'spigot/plugins/WorldGuard/worlds/world/regions.yml', JSON.parse({regions: regions}.to_json).to_yaml
@@ -94,51 +129,170 @@ end
 
 class Server
   def initialize
-    @cv = ConditionVariable.new
+    @watch = {}
+    @command_queue = Queue.new
     @mutex = Mutex.new
-    @saved = Time.now
-    Dir.chdir 'minecraft_server' do
-      @io = IO.popen 'java -jar minecraft_server.1.10.2.jar nogui', 'r+'
+    Dir.chdir 'spigot' do
+      old_pid = `pgrep -f spigot`.to_i
+      `kill -INT #{old_pid}` if old_pid > 0
+      @io = IO.popen 'java -jar spigot-1.10.2.jar nogui', 'r+'
       at_exit { @io.close }
     end
     Thread.new do
+      begin
       loop do
-        s = @io.gets
-        puts s
-        Process.exit if s.nil?
-        Thread.new{signal_update { @saved = Time.now } if s =~ /Saved/}
+        msg, block, callback = @command_queue.deq
+        callback << [_command(msg, &block)]
+      end
+      rescue=>e
+        p e
+      ensure
+        p :error
+        Process.exit
+      end
+    end
+    Thread.new do
+      begin
+        loop do
+          s = @io.gets
+          puts s
+          @watch.each do |pattern, block|
+            Thread.new{block.call s} if pattern =~ s
+          end
+          Process.exit if s.nil?
+          @mutex.synchronize do
+            @queue << s if @queue
+          end
+        end
+      rescue => e
+        p e
+      ensure
+        p :error
+        begin;@io.close;rescue=>e;end
+        Process.exit
       end
     end
   end
 
-  def save
-    time = Time.now
-    command 'save-all'
-    wait_until { @saved > time }
+  def on pattern, &block
+    @watch[pattern] = block
   end
 
-  def command msg
-    @io.puts msg
+  def save
+    command 'save-all', /^\[[^\]]+\]: Saved the world/
+  end
+
+  def rg_reload
+    command 'rg reload', /^\[[^\]]+\]: Successfully load the region data for all worlds\./
+  end
+
+  def tp name, x:, y: 80, z:
+    command "tp #{name} #{x} #{y} #{z}", /^\[[^\]]+\]: (Teleported|The entity UUID provided is in an invalid format)/
+  end
+
+  def command msg, pattern=nil, &block
+    block = ->s{pattern.match s} if pattern
+    cb = Queue.new
+    @command_queue << [msg, block, cb]
+    cb.deq
   end
 
   private
-  def signal_update &block
-    @mutex.synchronize do
-      block.call
-      @cv.signal
-    end
-  end
 
-  def wait_until &block
+  def _command msg, &block
+    p :exec_cmd
     @mutex.synchronize do
-      @cv.wait @mutex until block.call
+      @queue = Queue.new
     end
+    @io.puts msg
+    result = nil
+    loop do
+      result = block.call @queue.deq
+      break if result
+    end
+    @mutex.synchronize do
+      @queue = nil
+    end
+    p :exec_done
+    result
   end
-
 end
 
-# s=Server.new
-Regions.new.save
-# binding.pry
-exit
-p 1
+
+regions = Regions.new
+server = Server.new
+server.on /\[[^\]]+\]: UUID of player/ do |line|
+  begin
+  next unless /UUID of player (?<name>[a-zA-Z0-9_-]+)/ =~ line
+  areas = regions.areas_by_user name
+  if areas.size==1
+    print_area = areas.first['print']
+    server.tp(
+      name,
+      x: (print_area['min']['x']+print_area['max']['x'])/2,
+      z: (print_area['min']['z']+print_area['max']['z'])/2,
+      y: print_area['max']['y']+8,
+    )
+  else
+    server.tp name, x: 290, z: 275, y: 80
+  end
+  rescue=>e
+    p 'login hook error'
+    p e.backtrace
+  end
+end
+
+set :public_folder, './public'
+
+user_list_op = lambda do |area_id, user_id, add:|
+  next unless user_id =~ /\A[a-zA-Z0-9_-]+\z/
+  users = regions.area_users[area_id]
+  if add
+    users |= [user_id]
+  else
+    users -= [user_id]
+  end
+  regions.register area_id, users
+  regions.save
+  server.tp user_id, regions.area_position(area_id) if add
+  server.rg_reload
+end
+
+post '/tp' do
+  user_id = params[:user_id]
+  next unless user_id =~ /\A[a-zA-Z0-9_-]+\z/
+  pos = regions.area_position params[:area_id]
+  server.tp user_id, pos if pos
+  content_type :json
+  pos.to_json
+end
+
+get '/user_list' do
+  content_type :json
+  regions.area_users.to_json
+end
+
+post '/user_list_add' do
+  user_list_op.call params[:area_id], params[:user_id], add: true
+  content_type :json
+  regions.area_users.to_json
+end
+
+post '/user_list_remove' do
+  user_list_op.call params[:area_id], params[:user_id], add: false
+  content_type :json
+  regions.area_users.to_json
+end
+
+get '/stl' do
+  area = regions.area params[:area_id]
+  next unless area
+  server.save
+  sleep 4
+  STLExtract.new('spigot/world/region/r.0.0.mca').extract(
+    *%w(x y z).map{|axis|area['print']['min'][axis]},
+    *%w(x y z).map{|axis|area['print']['max'][axis]}
+  )
+end
+
+Sinatra::Application.run!
