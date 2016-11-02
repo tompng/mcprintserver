@@ -1,0 +1,15 @@
+server-propetries:
+```
+generate-structures=false
+spawn-monsters=false
+max-players=100
+pvp=false
+spawn-animals=false
+spawn-npcs=false
+max-world-size=1024
+level-type=CUSTOMIZED
+generator-settings={"useCaves": false, "useStrongholds": false, "useMineshafts": false, "useVillages": false, "useRavines": false, "useDungeons": false, "useLavaLakes": false, "HeightScale": 1, "HeightStretch": 32, "fixedBiome": 1}
+```
+
+worldborder center 255 255
+worldborder set 640 640

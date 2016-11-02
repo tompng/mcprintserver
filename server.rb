@@ -1,6 +1,7 @@
+#spigot入れる(build)
+#worldedit worldguard入れる
 require 'pry'
-require 'chunky_png'
-require './mc_world/world'
+require 'json'
 
 class Server
   def initialize
@@ -23,8 +24,12 @@ class Server
 
   def save
     time = Time.now
-    @io.puts 'save-all'
+    command 'save-all'
     wait_until { @saved > time }
+  end
+
+  def command msg
+    @io.puts msg
   end
 
   private
@@ -41,16 +46,6 @@ class Server
     end
   end
 
-end
-
-def load_world
-  MCWorld::World.new file: 'minecraft_server/world/region/r.0.0.mca'
-end
-
-def image
-  world = load_world
-  haschunk = {}
-  img = ChunkyPNG::Image.new 512, 512
 end
 
 s=Server.new

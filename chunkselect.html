@@ -1,0 +1,58 @@
+<div class='map'></div>
+<textarea>[[1,1],[1,7],[1,9],[1,11],[1,13],[3,11],[4,6],[4,25],[4,27],[4,30],[6,1],[6,20],[6,24],[6,26],[6,28],[6,30],[7,8],[7,10],[7,22],[8,1],[8,26],[8,28],[8,30],[9,10],[10,1],[10,27],[11,18],[11,20],[11,25],[12,5],[12,12],[13,3],[14,5],[14,14],[14,21],[14,29],[15,18],[15,25],[16,1],[16,15],[16,23],[16,28],[17,4],[17,19],[17,26],[18,6],[18,8],[18,29],[19,22],[19,24],[20,26],[20,30],[21,9],[21,17],[22,6],[22,20],[22,30],[23,8],[24,19],[24,21],[25,8],[25,24],[26,1],[26,6],[26,18],[26,20],[26,22],[27,14],[27,27],[28,4],[28,12],[28,21],[29,1],[29,15],[29,19],[29,23],[30,10],[30,17],[30,21],[30,26],[30,28],[30,30]]</textarea>
+<style>
+.map{
+  width: 512;height: 512;
+  background-image: url(mcheight.png);
+  background-size: cover;
+  position: relative;
+}
+.map div{
+  position: absolute;
+  width: 16;height:16;
+  color: transparent;
+  overflow: hidden;
+  font-size: 8px;
+}
+.map div:hover{
+  background: rgba(255,0,0,0.2);
+  color: black;
+}
+.map div.selected{
+  background: rgba(255,0,0,0.4);
+}
+</style>
+<script>
+onload=function(){
+  div=document.querySelector('.map')
+  for(var i=0;i<32;i++)for(var j=0;j<32;j++){
+    div.appendChild(create(i,j))
+  }
+  chunks = JSON.parse(document.querySelector('textarea').value)
+  if(!chunks)return
+  chunks.forEach(function(c){
+    document.querySelector('[data-coordinate="'+JSON.stringify(c)+'"]').click()
+  })
+}
+function create(i,j){
+  var d=document.createElement('div')
+  d.style.left=i*16;d.style.top=j*16
+  var key=JSON.stringify([i,j])
+  d.setAttribute('data-coordinate',key)
+  d.onclick=function(){
+    if(d.className=='selected')d.className=''
+    else{
+      for(var ii=-1;ii<=1;ii++)for(var jj=-1;jj<=1;jj++){
+        var el=document.querySelector('[data-coordinate="'+JSON.stringify([i+ii,j+jj])+'"]')
+        if(el)el.className=''
+      }
+      d.className='selected'
+    }
+    var selecteds=document.querySelectorAll('.selected')
+    var coords=[]
+    for(var k=0;k<selecteds.length;k++)coords.push(JSON.parse(selecteds[k].getAttribute('data-coordinate')))
+    document.querySelector('textarea').value=JSON.stringify(coords)
+  }
+  return d
+}
+</script>
