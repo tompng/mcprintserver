@@ -1,5 +1,8 @@
 server-propetries:
 ```
+force-gamemode=true
+allow-nether=false
+gamemode=1
 generate-structures=false
 spawn-monsters=false
 max-players=100
@@ -13,3 +16,5 @@ generator-settings={"useCaves": false, "useStrongholds": false, "useMineshafts":
 
 worldborder center 255 255
 worldborder set 640 640
+gamerule doDaylightCycle false
+time set 6000
