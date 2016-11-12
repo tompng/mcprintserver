@@ -1,3 +1,7 @@
 spigot
 *.png
 *.json
+*.obj
+*.stl
+*.mtl
+mc_world
