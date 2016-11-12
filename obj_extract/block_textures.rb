@@ -1,6 +1,60 @@
 require_relative '../mc_world/world'
 require 'json'
 module BlockTextures
+  def self.render_plane ctx, texture_id, position:, rotate: 0, scale: 1
+    pos = @meta[texture_id]
+    get = ->(x,y){
+      return false unless (0...16).include?(x) && (0...16).include?(y)
+      @image[16*pos[:x]+x, 16*pos[:y]+y]&0xff > 0x80
+    }
+    theta = Math::PI*rotate/180
+    cos, sin = Math.cos(theta), Math.sin(theta)
+    pixel = ->(*points){
+      verts = points.map do |x, y, z|
+        ctx.vert(
+          position[0]+((x-8)*cos+(z-0.5)*sin)/16.0*scale,
+          position[1]+(1-y/16.0)*scale,
+          position[2]+((z-0.5)*cos-(x-8)*sin)/16.0*scale
+        )
+      end
+      uvs = points.map do |x,y,z|
+        ctx.uv (16*pos[:x]+[0.5, x, 15.5].sort[1])/512.0, 1-(16*pos[:y]+[0.5, y, 15.5].sort[1])/512.0
+      end
+      ctx.face *verts.zip(uvs)
+    }
+    (0...16).to_a.repeated_permutation(2).each do |x, y|
+      next unless get.call x, y
+      pixel.call [x, y,0], [x+1, y, 0], [x+1, y+1, 0], [x, y+1, 0]
+      pixel.call [x, y, 1], [x, y+1, 1], [x+1, y+1, 1], [x+1, y, 1]
+      unless get.call x-1, y
+        pixel.call [x, y, 0], [x, y+1, 0], [x, y+1, 1], [x, y, 1]
+      end
+      unless get.call x+1, y
+        pixel.call [x+1, y, 0], [x+1, y, 1], [x+1, y+1, 1], [x+1, y+1, 0]
+      end
+      unless get.call x, y-1
+        pixel.call [x, y, 0], [x, y, 1], [x+1, y, 1], [x+1, y, 0]
+      end
+      unless get.call x, y+1
+        pixel.call [x, y+1, 0], [x+1, y+1, 0], [x+1, y+1, 1], [x, y+1, 1]
+      end
+    end
+  end
+
+  class CrossBlock
+    def initialize texture
+      @texture = texture
+    end
+    def cube?
+      false
+    end
+    def render ctx, pos
+      position = pos.zip([0.5, 0, 0.5]).map{|a|a.inject :+}
+      BlockTextures.render_plane ctx, @texture, position: position, rotate: 45, scale: Math.sqrt(2)
+      BlockTextures.render_plane ctx, @texture, position: position, rotate: -45, scale: Math.sqrt(2)
+    end
+  end
+
   class CubeBlock
     def initialize top, side=nil, bottom=nil
       @top = top
@@ -55,7 +109,7 @@ module BlockTextures
 
     png_dir = "#{File.dirname(__FILE__)}/blocks"
     files = Dir.glob("#{png_dir}/*.png")
-    image = ChunkyPNG::Image.new 512, 512
+    @image = ChunkyPNG::Image.new 512, 512
     meta = {}
     files.each_slice(32).with_index do |slice, y|
       slice.each_with_index do |file, x|
@@ -72,16 +126,16 @@ module BlockTextures
             b += color[2]-0x80
             a = 0xff if name =~ /leaves/
             r,g,b = [r,g,b].map{|c|[0,c,0xff].sort[1]}
-            image[16*x+ix, 16*y+iy] = [a,b,g,r].each_with_index.map{|c,i|c<<(8*i)}.inject(:|)
+            @image[16*x+ix, 16*y+iy] = [a,b,g,r].each_with_index.map{|c,i|c<<(8*i)}.inject(:|)
           else
-            image[16*x+ix, 16*y+iy] = c
+            @image[16*x+ix, 16*y+iy] = c
           end
         end
       end
     end
     @meta = meta
     File.write 'meta.json', meta.to_json
-    image.save 'texture.png'
+    @image.save 'texture.png'
     File.write 'block.mtl', %(newmtl block\n  map_Ka texture.png\n  map_Kd texture.png\n)
   end
   gen_mtl
@@ -109,7 +163,18 @@ module BlockTextures
     }.compact.to_h
   end
   def self.overrides
+    # require 'pry';binding.pry
     {
+      MCWorld::Block::TallGrass => CrossBlock.new('tallgrass'),
+      MCWorld::Block::Dandelion => CrossBlock.new('flower_dandelion'),
+      MCWorld::Block::BlueOrchid => CrossBlock.new('flower_blue_orchid'),
+      MCWorld::Block::Allium => CrossBlock.new('flower_allium'),
+      MCWorld::Block::RedTulip => CrossBlock.new('flower_tulip_red'),
+      MCWorld::Block::OrangeTulip => CrossBlock.new('flower_tulip_orange'),
+      MCWorld::Block::WhiteTulip => CrossBlock.new('flower_tulip_white'),
+      MCWorld::Block::PinkTulip => CrossBlock.new('flower_tulip_pink'),
+      MCWorld::Block::OxeyeDaisy => CrossBlock.new('flower_oxeye_daisy'),
+
       MCWorld::Block::Grass => CubeBlock.new('grass_top', 'grass_side', 'dirt'),
       MCWorld::Block::Dirt => CubeBlock.new('dirt'),
       MCWorld::Block::Stone => CubeBlock.new('stone'),
