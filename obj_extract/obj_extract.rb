@@ -79,6 +79,7 @@ class OBJExtract
     @verts = []
     @uvs = []
     @faces = []
+    @norms = []
   end
 
   def vert x,y,z
@@ -91,8 +92,17 @@ class OBJExtract
     @uvs.size
   end
 
-  def face *a
-    @faces << a
+  def face a, b, c
+    pa, pb, pc = @verts[a[0]-1], @verts[b[0]-1], @verts[c[0]-1]
+    ax, ay, az = pa.zip(pc).map{|a,c|a-c}
+    bx, by, bz = pb.zip(pc).map{|b,c|b-c}
+    nx = ay*bz-az*by
+    ny = az*bx-ax*bz
+    nz = ax*by-ay*bx
+    nr = Math.sqrt(nx**2+ny**2+nz**2)
+    @norms << [nx/nr, ny/nr, nz/nr]
+    n = @norms.size
+    @faces << [[*a,n],[*b,n],[*c,n]]
   end
 
   def quadface pos, dir, texture_id
@@ -119,9 +129,10 @@ class OBJExtract
   def data
     vert_defs = @verts.map{|v|"v #{v.join ' '}\n"}
     uv_defs = @uvs.map{|uv|"vt #{uv.join ' '}\n"}
+    norm_defs = @norms.map{|n|"vn #{n.join ' '}\n"}
     face_defs = @faces.map{|f|"f #{f.map{|x|x.join '/'}.join ' '}\n"}
     header = "mtllib block.mtl\no block\ng block\nusemtl block"
-    [header,vert_defs.join,uv_defs.join,face_defs.join].join "\n"
+    [header,vert_defs.join,uv_defs.join,norm_defs.join,face_defs.join].join "\n"
   end
 
   def extract xmin,ymin,zmin,xmax,ymax,zmax

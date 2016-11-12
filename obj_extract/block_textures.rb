@@ -16,6 +16,7 @@ module BlockTextures
   end
   def self.overrides
     {
+      MCWorld::Block::Grass => 'grass_top',
       MCWorld::Block::Dirt => 'dirt',
       MCWorld::Block::Stone => 'stone',
       MCWorld::Block::SlimeBlock => 'slime',

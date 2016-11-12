@@ -25,14 +25,11 @@ function init() {
   /* Scene */
   scene = new THREE.Scene();
   lighting = false;
-  ambient = new THREE.AmbientLight(0xffffff, 1.0);
+  ambient = new THREE.AmbientLight(0xffffff, 0.5);
   scene.add(ambient);
-  keyLight = new THREE.DirectionalLight(new THREE.Color('hsl(30, 100%, 75%)'), 1.0);
-  keyLight.position.set(-100, 0, 100);
-  fillLight = new THREE.DirectionalLight(new THREE.Color('hsl(240, 100%, 75%)'), 0.75);
-  fillLight.position.set(100, 0, 100);
   backLight = new THREE.DirectionalLight(0xffffff, 1.0);
   backLight.position.set(100, 0, -100).normalize();
+	scene.add(backLight);
   /* Model */
   var mtlLoader = new THREE.MTLLoader();
   mtlLoader.setBaseUrl('assets/');
@@ -61,7 +58,6 @@ function init() {
   controls.enableZoom = false;
   /* Events */
   window.addEventListener('resize', onWindowResize, false);
-  window.addEventListener('keydown', onKeyboardEvent, false);
 }
 
 function onWindowResize() {
@@ -72,24 +68,9 @@ function onWindowResize() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-function onKeyboardEvent(e) {
-  if (e.code === 'KeyL') {
-    lighting = !lighting;
-    if (lighting) {
-      ambient.intensity = 0.25;
-      scene.add(keyLight);
-      scene.add(fillLight);
-      scene.add(backLight);
-    } else {
-      ambient.intensity = 1.0;
-      scene.remove(keyLight);
-      scene.remove(fillLight);
-      scene.remove(backLight);
-    }
-  }
-}
-
 function animate() {
+	var t=performance.now()/1000/4
+	backLight.position.set(100*Math.cos(t), 100, 100*Math.sin(t)).normalize();
   requestAnimationFrame(animate);
   controls.update();
   render();
