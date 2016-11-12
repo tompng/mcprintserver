@@ -4,10 +4,10 @@ require 'json'
 class OBJExtract
   def self.gen_mtl
     grass_color = [0x60, 0x90, 0x30]
-    stem_color1 = [0x60, 0x80, 0x40]
+    stem_color1 = [0x40, 0x80, 0x10]
     stem_color2 = [0x80, 0x70, 0x10]
     leaf_color  = [0x40, 0x80, 0x10]
-    redstone_color = [0xff,0,0]
+    redstone_color = [0x80,-0xff,-0xff]
     colors = {
       'grass_top' => grass_color,
       'fern' => grass_color,
