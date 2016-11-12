@@ -16,7 +16,9 @@ module BlockTextures
       elsif dy<0
         BlockTextures.texture_uvs @bottom
       else
-        BlockTextures.texture_uvs @side
+        idx = dx>0 ? 0 : dz>0 ? 1 : dx<0 ? 2: 3
+        rotates = [3,2,2,3]
+        BlockTextures.texture_uvs @side, rotate: rotates[idx]
       end
     end
   end
@@ -84,11 +86,13 @@ module BlockTextures
   end
   gen_mtl
 
-  def self.texture_uvs texture_id
+  def self.texture_uvs texture_id, rotate: 0, flip: false
     pos = @meta[texture_id.to_s]
-    [[0,0],[1,0],[1,1],[0,1]].map do |x, y|
+    uvs = [[0,0],[1,0],[1,1],[0,1]].map{|x, y|
       [(pos[:x]+x)/32.0, (32-pos[:y]-y)/32.0]
-    end
+    }
+    uvs = [uvs[0],uvs[3],uvs[1],uvs[2]] if flip
+    uvs.rotate(rotate)
   end
 
   def self.estimateds
