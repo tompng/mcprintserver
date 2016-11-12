@@ -1,6 +1,7 @@
 require_relative '../mc_world/world'
 require 'chunky_png'
 require 'json'
+require_relative './block_textures'
 class OBJExtract
   def self.gen_mtl
     grass_color = [0x60, 0x90, 0x30]
@@ -59,23 +60,42 @@ class OBJExtract
         end
       end
     end
+    @meta = meta
     File.write 'meta.json', meta.to_json
     image.save 'texture.png'
-    File.write 'block.mtl', %(newmtl block\n  map_Ka texture.png\n  map_Ka texture.png)
+    File.write 'block.mtl', %(newmtl block\n  map_Ka texture.png\n  map_Kd texture.png\n)
+  end
+  gen_mtl
+
+  def self.texture_uvs texture_id
+    pos = @meta[texture_id.to_s]
+    [[0,0],[1,0],[1,1],[0,1]].map do |x, y|
+      [(pos[:x]+x)/32.0, (32-pos[:y]-y)/32.0]
+    end
   end
 
   def initialize file
     @world = MCWorld::World.new file: file
+    @verts = []
+    @uvs = []
+    @faces = []
   end
 
-  def stl name='shape'
-    @output = []
-    @output << "solid #{name}"
-    yield
-    @output << "endsolid #{name}"
-    @output.join "\n"
+  def vert x,y,z
+    @verts << [x,y,z].map{|x|x/8.0}
+    @verts.size
   end
-  def face pos, dir
+
+  def uv u,v
+    @uvs << [u,v]
+    @uvs.size
+  end
+
+  def face *a
+    @faces << a
+  end
+
+  def quadface pos, dir, texture_id
     val, axis = dir.each.with_index.find{ |val, axis| val.nonzero? }
     p00, p01, p10, p11 = 4.times.map { dir.dup }
     p00[ (axis+1) % 3] = -1
@@ -87,50 +107,43 @@ class OBJExtract
     p11[ (axis+1) % 3] = +1
     p11[ (axis+2) % 3] = +1
     p10, p01 = p01, p10 if val < 0
-    vertex = ->(p){pos.zip(p).map{|ps,p|ps+(1+p)/2}.join ' '}
-    @output << %(
-      facet normal #{dir.join ' '}
-        outer loop
-          vertex #{vertex[p00]}
-          vertex #{vertex[p10]}
-          vertex #{vertex[p11]}
-        endloop
-      endfacet
-      facet normal #{dir.join ' '}
-        outer loop
-          vertex #{vertex[p00]}
-          vertex #{vertex[p11]}
-          vertex #{vertex[p01]}
-        endloop
-      endfacet
-    )
+    vertex = ->(p){pos.zip(p).map{|ps,p|ps+(1+p)/2}}
+
+    verts = [vertex[p00], vertex[p10], vertex[p11], vertex[p01]].map{|v|vert *v}
+    uvs = self.class.texture_uvs(texture_id).map{|tc|uv *tc}
+
+    face *[0,1,2].map{|i|[verts[i],uvs[i]]}
+    face *[0,2,3].map{|i|[verts[i],uvs[i]]}
+  end
+
+  def data
+    vert_defs = @verts.map{|v|"v #{v.join ' '}\n"}
+    uv_defs = @uvs.map{|uv|"vt #{uv.join ' '}\n"}
+    face_defs = @faces.map{|f|"f #{f.map{|x|x.join '/'}.join ' '}\n"}
+    header = "mtllib block.mtl\no block\ng block\nusemtl block"
+    [header,vert_defs.join,uv_defs.join,face_defs.join].join "\n"
   end
 
   def extract xmin,ymin,zmin,xmax,ymax,zmax
     table = {}
-    set = ->(x,y,z){table[(((x-xmin)&0xff)<<16)|(((y-ymin)&0xff)<<8)|((z-zmin)&0xff)]=true}
-    get = ->(x,y,z){table[(((x-xmin)&0xff)<<16)|(((y-ymin)&0xff)<<8)|((z-zmin)&0xff)]}
+    get = ->(x,y,z){
+      @world[x,z,y] if (xmin..xmax).include?(x) && (ymin..ymax).include?(y) && (zmin..zmax).include?(z)
+    }
     (xmin..xmax).each{|x|
       (ymin..ymax).each{|y|
         (zmin..zmax).each{|z|
-          set[x,y,z] if @world[x,z,y]
-        }
-      }
-    }
-    stl 'mc' do
-      (xmin..xmax).each{|x|
-        (ymin..ymax).each{|y|
-          (zmin..zmax).each{|z|
-            next unless get[x,y,z]
-            [[-1,0,0],[1,0,0],[0,-1,0],[0,1,0],[0,0,-1],[0,0,1]].each{|dx,dy,dz|
-              face [x-(xmin+xmax)/2,y-(ymin+ymax)/2,z-(zmin+zmax)/2], [dx,dy,dz] unless get[x+dx,y+dy,z+dz]
-            }
+          block = BlockTextures::Info[get[x,y,z]]
+          next unless block
+          [[-1,0,0],[1,0,0],[0,-1,0],[0,1,0],[0,0,-1],[0,0,1]].each{|dx,dy,dz|
+            facing = BlockTextures::Info[get[x+dx,y+dy,z+dz]]
+            quadface [x-(xmin+xmax)/2,y-(ymin+ymax)/2,z-(zmin+zmax)/2], [dx,dy,dz], block unless facing
           }
         }
       }
-    end
+    }
+    data
   end
 end
 
-
-OBJExtract.gen_mtl
+objext = OBJExtract.new('../spigot/world/region/r.0.0.mca')
+File.write '../public/assets/block.obj', objext.extract(16,66-12,16,31,81-12,31)

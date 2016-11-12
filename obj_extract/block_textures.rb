@@ -1,6 +1,5 @@
 require_relative '../mc_world/world'
 require 'json'
-require 'pry'
 module BlockTextures
   def self.estimateds
     files = JSON.parse File.read('meta.json')
@@ -17,6 +16,8 @@ module BlockTextures
   end
   def self.overrides
     {
+      MCWorld::Block::Dirt => 'dirt',
+      MCWorld::Block::Stone => 'stone',
       MCWorld::Block::SlimeBlock => 'slime',
       MCWorld::Block::EndStoneBricks => 'end_bricks',
       MCWorld::Block::Andesite => 'stone_andesite',
@@ -27,5 +28,5 @@ module BlockTextures
       MCWorld::Block::PolishedDiorite => 'stone_diorite_smooth'
     }
   end
-  BlockTextures = estimateds.merge overrides
+  Info = estimateds.merge overrides
 end
