@@ -41,6 +41,22 @@ module BlockTextures
     end
   end
 
+  class SharpmarkBlock
+    def initialize texture
+      @texture = texture
+    end
+    def cube?
+      false
+    end
+    def render ctx, pos
+      position = ->(x,z){pos.zip([x, 0, z]).map{|a|a.inject :+}}
+      BlockTextures.render_plane ctx, @texture, position: position[0.5,0.25+1/32.0], rotate: 0
+      BlockTextures.render_plane ctx, @texture, position: position[0.5,0.75-1/32.0], rotate: 0
+      BlockTextures.render_plane ctx, @texture, position: position[0.25+1/32.0,0.5], rotate: 90
+      BlockTextures.render_plane ctx, @texture, position: position[0.75-1/32.0,0.5], rotate: 90
+    end
+  end
+
   class CrossBlock
     def initialize texture
       @texture = texture
@@ -163,30 +179,118 @@ module BlockTextures
     }.compact.to_h
   end
   def self.overrides
-    # require 'pry';binding.pry
-    {
-      MCWorld::Block::TallGrass => CrossBlock.new('tallgrass'),
-      MCWorld::Block::Dandelion => CrossBlock.new('flower_dandelion'),
-      MCWorld::Block::BlueOrchid => CrossBlock.new('flower_blue_orchid'),
-      MCWorld::Block::Allium => CrossBlock.new('flower_allium'),
-      MCWorld::Block::RedTulip => CrossBlock.new('flower_tulip_red'),
-      MCWorld::Block::OrangeTulip => CrossBlock.new('flower_tulip_orange'),
-      MCWorld::Block::WhiteTulip => CrossBlock.new('flower_tulip_white'),
-      MCWorld::Block::PinkTulip => CrossBlock.new('flower_tulip_pink'),
-      MCWorld::Block::OxeyeDaisy => CrossBlock.new('flower_oxeye_daisy'),
+    camelize = ->s{s.split('_').map(&:capitalize).join}
+    colors = %w(black blue brown cyan gray green light_blue lime magenta orange pink purple red silver white yellow).map{|c|
+      [c, (c == 'silver' ? 'LightGray' : camelize[c])]
+    }.to_h
+    woods = {acacia: 'Acacia', big_oak: 'DarkOak', birch: 'Birch', jungle: 'Jungle', oak: 'Oak', spruce: 'Spruce'}
+    defs = {}
+    4.times.map do |i|
+      defs[MCWorld::Block::BeetrootBlock[i]] = SharpmarkBlock.new "beetroots_stage_#{i}"
+      defs[MCWorld::Block::Carrots[i]] = SharpmarkBlock.new "carrots_stage_#{i}"
+      defs[MCWorld::Block::Potatoes[i]] = SharpmarkBlock.new "potatoes_stage_#{i}"
+    end
+    3.times.map do |i|
+      defs[MCWorld::Block::NetherWart[i]] = SharpmarkBlock.new "nether_wart_stage_#{i}"
+    end
+    8.times.map do |i|
+      defs[MCWorld::Block::WheatCrops[i]] = SharpmarkBlock.new "wheat_stage_#{i}.png"
+    end
+    defs[MCWorld::Block::SugarCanes] = CrossBlock.new 'reeds'
+    defs[MCWorld::Block::Fern] = CrossBlock.new 'fern'
+    defs[MCWorld::Block::TallGrass] = CrossBlock.new 'tallgrass'
+    defs[MCWorld::Block::Dandelion] = CrossBlock.new 'flower_dandelion'
+    defs[MCWorld::Block::BlueOrchid] = CrossBlock.new 'flower_blue_orchid'
+    defs[MCWorld::Block::Allium] = CrossBlock.new 'flower_allium'
+    defs[MCWorld::Block::RedTulip] = CrossBlock.new 'flower_tulip_red'
+    defs[MCWorld::Block::OrangeTulip] = CrossBlock.new 'flower_tulip_orange'
+    defs[MCWorld::Block::WhiteTulip] = CrossBlock.new 'flower_tulip_white'
+    defs[MCWorld::Block::PinkTulip] = CrossBlock.new 'flower_tulip_pink'
+    defs[MCWorld::Block::OxeyeDaisy] = CrossBlock.new 'flower_oxeye_daisy'
+    defs[MCWorld::Block::Fire] = CrossBlock.new 'fire_layer_0'
+    defs[MCWorld::Block::BrownMushroom] = CrossBlock.new 'mushroom_brown'
+    defs[MCWorld::Block::OakSapling] = CrossBlock.new 'sapling_oak'
+    defs[MCWorld::Block::SpruceSapling] = CrossBlock.new 'sapling_spruce'
+    defs[MCWorld::Block::BirchSapling] = CrossBlock.new 'sapling_birch'
+    defs[MCWorld::Block::JungleSapling] = CrossBlock.new 'sapling_jungle'
+    defs[MCWorld::Block::AcaciaSapling] = CrossBlock.new 'sapling_acacia'
+    defs[MCWorld::Block::DarkOakSapling] = CrossBlock.new 'sapling_roofed_oak'
 
-      MCWorld::Block::Grass => CubeBlock.new('grass_top', 'grass_side', 'dirt'),
-      MCWorld::Block::Dirt => CubeBlock.new('dirt'),
-      MCWorld::Block::Stone => CubeBlock.new('stone'),
-      MCWorld::Block::SlimeBlock => CubeBlock.new('slime'),
-      MCWorld::Block::EndStoneBricks => CubeBlock.new('end_bricks'),
-      MCWorld::Block::Andesite => CubeBlock.new('stone_andesite'),
-      MCWorld::Block::Granite => CubeBlock.new('stone_granite'),
-      MCWorld::Block::Diorite => CubeBlock.new('stone_diorite'),
-      MCWorld::Block::PolishedAndesite => CubeBlock.new('stone_andesite_smooth'),
-      MCWorld::Block::PolishedGranite => CubeBlock.new('stone_granite_smooth'),
-      MCWorld::Block::PolishedDiorite => CubeBlock.new('stone_diorite_smooth')
-    }
+
+    defs[MCWorld::Block::Bookshelf] = CubeBlock.new 'planks_oak', 'bookshelf', 'planks_oak'
+    defs[MCWorld::Block::Bricks] = CubeBlock.new 'brick'
+    defs[MCWorld::Block::Clay] = CubeBlock.new 'clay'
+    defs[MCWorld::Block::BlockofCoal] = CubeBlock.new 'coal_block'
+    #cobblestone_mossy
+    defs[MCWorld::Block::Cobblestone] = CubeBlock.new 'cobblestone'
+    defs[MCWorld::Block::CraftingTable] = CubeBlock.new 'crafting_table_top', 'crafting_table_side', 'planks_oak'
+    defs[MCWorld::Block::Podzol] = CubeBlock.new 'dirt_podzol_top', 'dirt_podzol_side', 'dirt'
+    defs[MCWorld::Block::Grass] = CubeBlock.new 'grass_top', 'grass_side', 'dirt'
+    defs[MCWorld::Block::Dirt] = CubeBlock.new 'dirt'
+    defs[MCWorld::Block::EndStoneBricks] = CubeBlock.new 'end_bricks'
+    4.times do |i|
+      defs[MCWorld::Block::FrostedIce[i]] = CubeBlock.new "frosted_ice_#{i}"
+    end
+    defs[MCWorld::Block::Glass] = CubeBlock.new 'glass'
+    colors.each do |color, blockcolor|
+      defs[MCWorld::Block.const_get "#{blockcolor}StainedGlass"] = CubeBlock.new "glass_#{color}"
+    end
+    defs[MCWorld::Block::HardenedClay] = CubeBlock.new 'hardened_clay'
+    colors.each do |color, blockcolor|
+      defs[MCWorld::Block.const_get "#{blockcolor}StainedClay"] = CubeBlock.new "hardened_clay_stained_#{color}"
+    end
+    defs[MCWorld::Block::HayBale] = CubeBlock.new 'hay_block_top', 'hay_block_side'
+    defs[MCWorld::Block::Ice] = CubeBlock.new 'ice'
+    defs[MCWorld::Block::Jukebox] = CubeBlock.new 'jukebox_top', 'jukebox_side'
+    woods.each do |texname, blockname|
+      defs[MCWorld::Block.const_get "#{blockname}Wood"] = CubeBlock.new "log_#{texname}_top", "log_#{texname}_side"
+      defs[MCWorld::Block.const_get "#{blockname}WoodPlank"] = CubeBlock.new "planks_#{texname}"
+    end
+    defs[MCWorld::Block[213]] = CubeBlock.new 'magma'
+    defs[MCWorld::Block::MelonBlock] = CubeBlock.new 'melon_top', 'melon_side'
+    defs[MCWorld::Block::Mycelium] = CubeBlock.new 'mycelium_top', 'mycelium_side'
+    defs[MCWorld::Block::NetherBrick] = CubeBlock.new 'mycelium_top', 'nether_brick'
+    defs[MCWorld::Block[214]] = CubeBlock.new 'nether_wart_block'
+    defs[MCWorld::Block[215]] = CubeBlock.new 'nether_wart_block'
+    defs[MCWorld::Block::Prismarine] = CubeBlock.new 'prismarine_rough'
+    #pumpkin
+    defs[MCWorld::Block::PurpurPillar] = CubeBlock.new 'purpur_pillar_top', 'purpur_pillar'
+    defs[MCWorld::Block::QuartzBlock] = CubeBlock.new 'quartz_block_top', 'quartz_block_side', 'quartz_block_bottom'
+    defs[MCWorld::Block::ChiseledQuartzBlock] = CubeBlock.new 'quartz_block_chiseled_top', 'quartz_block_chiseled_side'
+    defs[MCWorld::Block::PillarQuartzBlock] = CubeBlock.new 'quartz_block_lines_top', 'quartz_block_lines'
+    defs[MCWorld::Block::RedSand] = CubeBlock.new 'red_sand'
+    defs[MCWorld::Block::RedSandstone] = CubeBlock.new 'red_sandstone_top', 'red_sandstone_normal', 'red_sandstone_bottom'
+    defs[MCWorld::Block::ChiseledRedSandstone] = CubeBlock.new 'red_sandstone_top', 'red_sandstone_carved', 'red_sandstone_bottom'
+    defs[MCWorld::Block::SmoothRedSandstone] = CubeBlock.new 'red_sandstone_top', 'red_sandstone_smooth', 'red_sandstone_bottom'
+    defs[MCWorld::Block::RedstoneLampOn] = CubeBlock.new 'redstone_lamp_on'
+    defs[MCWorld::Block::RedstoneLampOff] = CubeBlock.new 'red_sandstone_off'
+
+    defs[MCWorld::Block::Sand] = CubeBlock.new 'sand'
+    defs[MCWorld::Block::Sandstone] = CubeBlock.new 'sandstone_top', 'sandstone_normal', 'sandstone_bottom'
+    defs[MCWorld::Block::ChiseledSandstone] = CubeBlock.new 'sandstone_top', 'sandstone_carved', 'sandstone_bottom'
+    defs[MCWorld::Block::SmoothSandstone] = CubeBlock.new 'sandstone_top', 'sandstone_smooth', 'sandstone_bottom'
+
+    defs[MCWorld::Block::Snow] = CubeBlock.new 'snow'
+    defs[MCWorld::Block::SoulSand] = CubeBlock.new 'soul_sand'
+    defs[MCWorld::Block::Sponge] = CubeBlock.new 'sponge'
+    defs[MCWorld::Block::Stone] = CubeBlock.new 'stone'
+    defs[MCWorld::Block::SlimeBlock] = CubeBlock.new 'slime'
+    defs[MCWorld::Block::Andesite] = CubeBlock.new 'stone_andesite'
+    defs[MCWorld::Block::Granite] = CubeBlock.new 'stone_granite'
+    defs[MCWorld::Block::Diorite] = CubeBlock.new 'stone_diorite'
+    defs[MCWorld::Block::PolishedAndesite] = CubeBlock.new 'stone_andesite_smooth'
+    defs[MCWorld::Block::PolishedGranite] = CubeBlock.new 'stone_granite_smooth'
+    defs[MCWorld::Block::PolishedDiorite] = CubeBlock.new 'stone_diorite_smooth'
+    defs[MCWorld::Block::StoneBricks] = CubeBlock.new 'stonebrick'
+    defs[MCWorld::Block::MossyStoneBricks] = CubeBlock.new 'stonebrick_mossy'
+    defs[MCWorld::Block::CrackedStoneBricks] = CubeBlock.new 'stonebrick_cracked'
+    defs[MCWorld::Block::ChiseledStoneBricks] = CubeBlock.new 'stonebrick_carved'
+    defs[MCWorld::Block::TNT] = CubeBlock.new 'tnt_top', 'tnt_side', 'tnt_bottom'
+    colors.each do |color, blockcolor|
+      defs[MCWorld::Block.const_get "#{blockcolor}Wool"] = CubeBlock.new "wool_colored_#{color}"
+    end
+    require 'pry';binding.pry
+    defs
   end
   Info = estimateds.merge overrides
 end
