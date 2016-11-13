@@ -5,20 +5,30 @@ require_relative './block_textures'
 class OBJExtract
   def initialize file
     @world = MCWorld::World.new file: file
-    @verts = []
-    @uvs = []
+    @verts = {}
+    @vert_array = []
+    @uvs = {}
+    @norms = {}
     @faces = []
-    @norms = []
   end
 
   def vert x,y,z
-    @verts << [x,y,z].map{|x|x/8.0}
-    @verts.size
+    v = [x,y,z].map{|x|(x/8.0).round(3)}
+    vi = @verts[v.join(' ')] ||= @verts.size+1
+    @vert_array[vi-1] ||= v
+    vi
   end
 
   def uv u,v
-    @uvs << [u,v]
-    @uvs.size
+    uv = [u, v].join(' ')
+    @uvs[uv] ||= [@uvs.size+1, uv]
+    @uvs[uv].first
+  end
+
+  def norm x,y,z
+    n = [x,y,z].map{|x|x.round(3)}.join(' ')
+    @norms[n] ||= [@norms.size+1, n]
+    @norms[n].first
   end
 
   def face a, b, c, d=nil
@@ -27,15 +37,14 @@ class OBJExtract
       face a,c,d
       return
     end
-    pa, pb, pc = @verts[a[0]-1], @verts[b[0]-1], @verts[c[0]-1]
+    pa, pb, pc = [a,b,c].map{|vi,_|@vert_array[vi-1]}
     ax, ay, az = pa.zip(pc).map{|a,c|a-c}
     bx, by, bz = pb.zip(pc).map{|b,c|b-c}
     nx = ay*bz-az*by
     ny = az*bx-ax*bz
     nz = ax*by-ay*bx
     nr = Math.sqrt(nx**2+ny**2+nz**2)
-    @norms << [nx/nr, ny/nr, nz/nr]
-    n = @norms.size
+    n = norm nx/nr, ny/nr, nz/nr
     @faces << [[*a,n],[*b,n],[*c,n]]
   end
 
@@ -60,9 +69,10 @@ class OBJExtract
   end
 
   def data
-    vert_defs = @verts.map{|v|"v #{v.join ' '}\n"}
-    uv_defs = @uvs.map{|uv|"vt #{uv.join ' '}\n"}
-    norm_defs = @norms.map{|n|"vn #{n.join ' '}\n"}
+    round = ->v{v.map{|x|x.round(2)}.join(' ')}
+    vert_defs = @vert_array.map{|v|"v #{v.join(' ')}\n"}
+    uv_defs = @uvs.values.map{|_,uv|"vt #{uv}\n"}
+    norm_defs = @norms.values.map{|_,n|"vn #{n}\n"}
     face_defs = @faces.map{|f|"f #{f.map{|x|x.join '/'}.join ' '}\n"}
     header = "mtllib block.mtl\no block\ng block\nusemtl block"
     [header,vert_defs.join,uv_defs.join,norm_defs.join,face_defs.join].join "\n"
