@@ -29,6 +29,16 @@ function init() {
   scene.add(ambient);
   backLight = new THREE.DirectionalLight(0xffffff, 1.0);
   backLight.position.set(100, 0, -100).normalize();
+	backLight.castShadow = true
+	backLight.shadowMapWidth = 2048;
+	backLight.shadowMapHeight = 2048;
+	var d = 2;
+	backLight.shadowCameraLeft = -d;
+	backLight.shadowCameraRight = d;
+	backLight.shadowCameraTop = d;
+	backLight.shadowCameraBottom = -d;
+	var directionalLightHelper = new THREE.CameraHelper(backLight.shadow.camera);
+	// scene.add( directionalLightHelper);
 	scene.add(backLight);
   /* Model */
   var mtlLoader = new THREE.MTLLoader();
@@ -37,7 +47,6 @@ function init() {
 	var mtlfile = 'block.mtl?'+Math.random()
 	var objfile = 'block.obj?'+Math.random()
   mtlLoader.load(mtlfile, function (mtl) {
-		window.mtl=mtl;
     mtl.preload();
 		for(var i in mtl.materials){
 			mtl.materials[i].map.magFilter = THREE.NearestFilter;
@@ -48,6 +57,8 @@ function init() {
     objLoader.setPath('assets/');
     objLoader.load(objfile, function (object) {
 			window.oobbjj=object
+			object.children[0].castShadow = true
+			object.children[0].receiveShadow = true
       scene.add(object);
     });
   });
@@ -56,6 +67,7 @@ function init() {
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor(new THREE.Color("hsl(0, 0%, 10%)"));
+	renderer.shadowMapEnabled = true
   container.appendChild(renderer.domElement);
   /* Controls */
   controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -76,7 +88,7 @@ function onWindowResize() {
 
 function animate() {
 	var t=performance.now()/1000/4
-	backLight.position.set(100*Math.cos(t), 100, 100*Math.sin(t)).normalize();
+	backLight.position.set(2*Math.cos(t), 2, 2*Math.sin(t))
   requestAnimationFrame(animate);
   controls.update();
   render();
