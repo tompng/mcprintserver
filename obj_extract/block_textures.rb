@@ -1,7 +1,7 @@
 require_relative '../mc_world/world'
 require 'json'
 module BlockTextures
-  def self.render_plane ctx, texture_id, position:, rotate: 0, scale: 1
+  def self.render_plane ctx, texture_id, position:, rotate: 0, scale: 1, horizontal: false
     pos = @meta[texture_id]
     get = ->(x,y){
       return false unless (0...16).include?(x) && (0...16).include?(y)
@@ -11,10 +11,14 @@ module BlockTextures
     cos, sin = Math.cos(theta), Math.sin(theta)
     pixel = ->(*points){
       verts = points.map do |x, y, z|
+        x -= 8
+        z -= 0.5
+        y -= 8
+        z,y = y,-z if horizontal
         ctx.vert(
-          position[0]+((x-8)*cos+(z-0.5)*sin)/16.0*scale,
-          position[1]+(1-y/16.0)*scale,
-          position[2]+((z-0.5)*cos-(x-8)*sin)/16.0*scale
+          position[0]+(x*cos-z*sin)/16.0*scale,
+          position[1]+(-y/16.0)*scale,
+          position[2]+(z*cos+x*sin)/16.0*scale
         )
       end
       uvs = points.map do |x,y,z|
@@ -50,7 +54,7 @@ module BlockTextures
       false
     end
     def render ctx, pos
-      position = ->(x,z){pos.zip([x, 0, z]).map{|a|a.inject :+}}
+      position = ->(x,z){pos.zip([x, 0.5, z]).map{|a|a.inject :+}}
       BlockTextures.render_plane ctx, @texture, position: position[0.5,0.25+1/32.0], rotate: 0
       BlockTextures.render_plane ctx, @texture, position: position[0.5,0.75-1/32.0], rotate: 0
       BlockTextures.render_plane ctx, @texture, position: position[0.25+1/32.0,0.5], rotate: 90
@@ -67,9 +71,41 @@ module BlockTextures
       false
     end
     def render ctx, pos
-      position = pos.zip([0.5, 0, 0.5]).map{|a|a.inject :+}
-      BlockTextures.render_plane ctx, @texture, position: position, rotate: 45, scale: Math.sqrt(2)*16/17
-      BlockTextures.render_plane ctx, @texture, position: position, rotate: -45, scale: Math.sqrt(2)*16/17
+      scale = Math.sqrt(2)*16/17
+      position = pos.zip([0.5, 0.5*scale, 0.5]).map{|a,b|a+b}
+      BlockTextures.render_plane ctx, @texture, position: position, rotate: 45, scale: scale
+      BlockTextures.render_plane ctx, @texture, position: position, rotate: -45, scale: scale
+    end
+  end
+
+  class FloorMountedBlock
+    def initialize texture, dir: 0
+      BlockTextures.validate_texture! texture
+      @texture = texture
+      @dir = dir
+    end
+    def cube?
+      false
+    end
+    def render ctx, pos
+      position = pos.zip([0.5, 0.5-7.5/16, 0.5]).map{|a,b|a+b}
+      BlockTextures.render_plane ctx, @texture, position: position, horizontal: true, rotate: @dir*90
+    end
+  end
+
+  class WallMountedBlock
+    def initialize texture, dir: 0
+      BlockTextures.validate_texture! texture
+      @texture = texture
+      @dir = dir
+    end
+    def cube?
+      false
+    end
+    def render ctx, pos
+      th = Math::PI*@dir/2
+      position = pos.zip([0.5+Math.cos(th)*7.5/16, 0.5, 0.5+Math.sin(th)*7.5/16]).map{|a,b|a+b}
+      BlockTextures.render_plane ctx, @texture, position: position, rotate: (@dir-1)*90
     end
   end
 
@@ -225,7 +261,6 @@ module BlockTextures
     defs[MCWorld::Block::AcaciaSapling] = CrossBlock.new 'sapling_acacia'
     defs[MCWorld::Block::DarkOakSapling] = CrossBlock.new 'sapling_roofed_oak'
 
-
     defs[MCWorld::Block::Bookshelf] = CubeBlock.new 'planks_oak', 'bookshelf', 'planks_oak'
     defs[MCWorld::Block::Bricks] = CubeBlock.new 'brick'
     defs[MCWorld::Block::Clay] = CubeBlock.new 'clay'
@@ -297,7 +332,19 @@ module BlockTextures
     colors.each do |color, blockcolor|
       defs[MCWorld::Block.const_get "#{blockcolor}Wool"] = CubeBlock.new "wool_colored_#{color}"
     end
-    # require 'pry';binding.pry
+
+    %w(oak iron spruce birch jungle acacia dark_oak).each do |type|
+      wtype = type == 'oak' ? 'wood' : type
+      4.times do |i|
+        door = MCWorld::Block.const_get "#{camelize[type]}DoorBlock"
+        defs[door[i]] = WallMountedBlock.new "door_#{wtype}_lower", dir: i
+        defs[door[i+8]] = WallMountedBlock.new "door_#{wtype}_lower", dir: 3-i
+        defs[door[i+4]] = WallMountedBlock.new "door_#{wtype}_upper", dir: i
+        defs[door[i+12]] = WallMountedBlock.new "door_#{wtype}_upper", dir: 3-i
+      end
+    end
+
+    require 'pry';binding.pry
     defs
   end
   Info = estimateds.merge overrides
