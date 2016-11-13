@@ -36,12 +36,18 @@ function init() {
   mtlLoader.setPath('assets/');
 	var mtlfile = 'block.mtl?'+Math.random()
 	var objfile = 'block.obj?'+Math.random()
-  mtlLoader.load(mtlfile, function (materials) {
-    materials.preload();
+  mtlLoader.load(mtlfile, function (mtl) {
+		window.mtl=mtl;
+    mtl.preload();
+		for(var i in mtl.materials){
+			mtl.materials[i].map.magFilter = THREE.NearestFilter;
+			mtl.materials[i].map.needsUpdate=true
+		}
     var objLoader = new THREE.OBJLoader();
-    objLoader.setMaterials(materials);
+    objLoader.setMaterials(mtl);
     objLoader.setPath('assets/');
     objLoader.load(objfile, function (object) {
+			window.oobbjj=object
       scene.add(object);
     });
   });
