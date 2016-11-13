@@ -43,6 +43,7 @@ module BlockTextures
 
   class SharpmarkBlock
     def initialize texture
+      BlockTextures.validate_texture! texture
       @texture = texture
     end
     def cube?
@@ -59,6 +60,7 @@ module BlockTextures
 
   class CrossBlock
     def initialize texture
+      BlockTextures.validate_texture! texture
       @texture = texture
     end
     def cube?
@@ -76,6 +78,7 @@ module BlockTextures
       @top = top
       @side = side || top
       @bottom = bottom || top
+      BlockTextures.validate_texture! @top, @side, @bottom
     end
     def cube?
       true
@@ -156,6 +159,12 @@ module BlockTextures
   end
   gen_mtl
 
+  def self.validate_texture! *texture_ids
+    texture_ids.each do |t|
+      raise "invalid texture #{t}" unless @meta[t.to_s]
+    end
+  end
+
   def self.texture_uvs texture_id, rotate: 0, flip: false
     pos = @meta[texture_id.to_s]
     uvs = [[0,0],[1,0],[1,1],[0,1]].map{|x, y|
@@ -194,7 +203,7 @@ module BlockTextures
       defs[MCWorld::Block::NetherWart[i]] = SharpmarkBlock.new "nether_wart_stage_#{i}"
     end
     8.times.map do |i|
-      defs[MCWorld::Block::WheatCrops[i]] = SharpmarkBlock.new "wheat_stage_#{i}.png"
+      defs[MCWorld::Block::WheatCrops[i]] = SharpmarkBlock.new "wheat_stage_#{i}"
     end
     defs[MCWorld::Block::SugarCanes] = CrossBlock.new 'reeds'
     defs[MCWorld::Block::Fern] = CrossBlock.new 'fern'
@@ -243,7 +252,7 @@ module BlockTextures
     defs[MCWorld::Block::Ice] = CubeBlock.new 'ice'
     defs[MCWorld::Block::Jukebox] = CubeBlock.new 'jukebox_top', 'jukebox_side'
     woods.each do |texname, blockname|
-      defs[MCWorld::Block.const_get "#{blockname}Wood"] = CubeBlock.new "log_#{texname}_top", "log_#{texname}_side"
+      defs[MCWorld::Block.const_get "#{blockname}Wood"] = CubeBlock.new "log_#{texname}_top", "log_#{texname}"
       defs[MCWorld::Block.const_get "#{blockname}WoodPlank"] = CubeBlock.new "planks_#{texname}"
     end
     defs[MCWorld::Block[213]] = CubeBlock.new 'magma'
@@ -256,14 +265,13 @@ module BlockTextures
     #pumpkin
     defs[MCWorld::Block::PurpurPillar] = CubeBlock.new 'purpur_pillar_top', 'purpur_pillar'
     defs[MCWorld::Block::QuartzBlock] = CubeBlock.new 'quartz_block_top', 'quartz_block_side', 'quartz_block_bottom'
-    defs[MCWorld::Block::ChiseledQuartzBlock] = CubeBlock.new 'quartz_block_chiseled_top', 'quartz_block_chiseled_side'
+    defs[MCWorld::Block::ChiseledQuartzBlock] = CubeBlock.new 'quartz_block_chiseled_top', 'quartz_block_chiseled'
     defs[MCWorld::Block::PillarQuartzBlock] = CubeBlock.new 'quartz_block_lines_top', 'quartz_block_lines'
     defs[MCWorld::Block::RedSand] = CubeBlock.new 'red_sand'
     defs[MCWorld::Block::RedSandstone] = CubeBlock.new 'red_sandstone_top', 'red_sandstone_normal', 'red_sandstone_bottom'
     defs[MCWorld::Block::ChiseledRedSandstone] = CubeBlock.new 'red_sandstone_top', 'red_sandstone_carved', 'red_sandstone_bottom'
     defs[MCWorld::Block::SmoothRedSandstone] = CubeBlock.new 'red_sandstone_top', 'red_sandstone_smooth', 'red_sandstone_bottom'
     defs[MCWorld::Block::RedstoneLampOn] = CubeBlock.new 'redstone_lamp_on'
-    defs[MCWorld::Block::RedstoneLampOff] = CubeBlock.new 'red_sandstone_off'
 
     defs[MCWorld::Block::Sand] = CubeBlock.new 'sand'
     defs[MCWorld::Block::Sandstone] = CubeBlock.new 'sandstone_top', 'sandstone_normal', 'sandstone_bottom'
