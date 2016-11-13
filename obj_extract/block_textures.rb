@@ -66,8 +66,8 @@ module BlockTextures
     end
     def render ctx, pos
       position = pos.zip([0.5, 0, 0.5]).map{|a|a.inject :+}
-      BlockTextures.render_plane ctx, @texture, position: position, rotate: 45, scale: Math.sqrt(2)
-      BlockTextures.render_plane ctx, @texture, position: position, rotate: -45, scale: Math.sqrt(2)
+      BlockTextures.render_plane ctx, @texture, position: position, rotate: 45, scale: Math.sqrt(2)*16/17
+      BlockTextures.render_plane ctx, @texture, position: position, rotate: -45, scale: Math.sqrt(2)*16/17
     end
   end
 
@@ -289,7 +289,7 @@ module BlockTextures
     colors.each do |color, blockcolor|
       defs[MCWorld::Block.const_get "#{blockcolor}Wool"] = CubeBlock.new "wool_colored_#{color}"
     end
-    require 'pry';binding.pry
+    # require 'pry';binding.pry
     defs
   end
   Info = estimateds.merge overrides
