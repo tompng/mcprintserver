@@ -14,20 +14,46 @@ module Shape
     def uv
       [(id%16*4+data%4+0.5)/64, 1-(id/16*4+data/4+0.5)/64]
     end
-    def build env
+    def build &env
+      @face = []
+      3.times do |axis|
+        [-1,1].each do |dir|
+          vec = [0,0,0]
+          vec[axis] = dir
+          if env.call(*vec).class != Block
+            @face << vec
+          end
+        end
+      end
     end
-    def to_obj
+    def save x, y, z, output:
+      @face.each do |dx, dy, dz|
+        output.cubeface [x+0.5,y+0.5,z+0.5], [dx,dy,dz], [uv]*4
+      end
+    end
+  end
+  class Slab < Block
+    def build &env
+      @upper=(@data&0x8)!=0
+      @face = [[-1,0,0],[1,0,0],[0,-1,0],[0,1,0]]
+      @face << [0,0,1] if !@upper || env.call(0,0,1).class != Block
+      @face << [0,0,-1] if @upper || env.call(0,0,-1).class != Block
+    end
+    def save x, y, z, output:
+      @face.each do |dx, dy, dz|
+        output.cubeface [x+0.5,y+0.5,z+(@upper?0.75:0.25)], [dx,dy,dz], [uv]*4, zsize: 0.5
+      end
     end
   end
   class Stairs < Block
-    def build env
+    def build &env
       dir = @data&3
       up = (@data&4)>0?0:1
       dirvecs = [[1,0], [-1,0], [0,1], [0,-1]]
       dvec = dirvecs[dir]
-      blockback = env.call(*dvec)
-      blockfront = env.call(*dvec.map(&:-@))
-      @shape = [[[false,false],[false,false]],[[false,false],[false,false]]]
+      blockback = env.call(*dvec,0)
+      blockfront = env.call(*dvec.map(&:-@),0)
+      @shape = 2.times.map{2.times.map{[false,false]}}
       4.times{|i|@shape[i%2][i/2][1-up]=true}
       if Stairs === blockback && blockback.data&4==@data&4 && blockback.data&2!=@data&2
         dvec2 = dirvecs[blockback.data&3]
@@ -41,11 +67,21 @@ module Shape
         4.times{|i|@shape[i%2][i/2][up]=true}
         @shape[dx][dy][up]=false
       else
-        2.times{
+        2.times{|i|
           dx=(dvec[0].nonzero?||(2*i-1))>0?1:0
           dy=(dvec[1].nonzero?||(2*i-1))>0?1:0
           @shape[dx][dy][up]=true
         }
+      end
+    end
+    def save x, y, z, output:
+      dirs = 6.times.map{|i|[0,0,0].tap{|a|a[i/2]=i%2*2-1}}
+      [0,1].repeated_permutation(3).each do |i,j,k|
+        next unless @shape[i][j][k]
+        dirs.each do |di, dj, dk|
+          next if [0,1].include?(di+i)&&[0,1].include?(dj+j)&&[0,1].include?(dk+k)&&@shape[di+i][dj+j][dk+k]
+          output.cubeface [x+0.25+i/2.0,y+0.25+j/2.0,z+0.25+k/2.0], [di,dj,dk], [uv]*4, size: 0.5
+        end
       end
     end
   end
@@ -96,19 +132,20 @@ class OBJ
     @faces << [[*a,n],[*b,n],[*c,n]]
   end
 
-  def quadface pos, dir, texture_uvs
+  def cubeface pos, dir, texture_uvs, size: nil, xsize: 1, ysize: 1, zsize: 1
+    xsize = ysize = zsize = size if size
     val, axis = dir.each.with_index.find{ |val, axis| val.nonzero? }
     p00, p01, p10, p11 = 4.times.map { dir.dup }
-    p00[ (axis+1) % 3] = -1
-    p00[ (axis+2) % 3] = -1
-    p01[ (axis+1) % 3] = -1
-    p01[ (axis+2) % 3] = +1
-    p10[ (axis+1) % 3] = +1
-    p10[ (axis+2) % 3] = -1
-    p11[ (axis+1) % 3] = +1
-    p11[ (axis+2) % 3] = +1
+    p00[(axis+1)%3]=-1
+    p00[(axis+2)%3]=-1
+    p01[(axis+1)%3]=-1
+    p01[(axis+2)%3]=+1
+    p10[(axis+1)%3]=+1
+    p10[(axis+2)%3]=-1
+    p11[(axis+1)%3]=+1
+    p11[(axis+2)%3]=+1
     p10, p01 = p01, p10 if val < 0
-    vertex = ->(p){pos.zip(p).map{|ps,p|ps+(1+p)/2}}
+    vertex = ->(p){pos.zip(p, [xsize,ysize,zsize]).map{|ps,p,s|ps+p/2.0*s}}
     verts = [vertex[p00], vertex[p10], vertex[p11], vertex[p01]].map{|v|vert *v}
     uvs = texture_uvs.map{|tc|uv *tc}
     face *verts.zip(uvs)
@@ -127,27 +164,33 @@ end
 class OBJExtract
   def initialize file
     @obj = OBJ.new
-    @world = MCWorld::World.new file: file
+    # @world = MCWorld::World.new file: file
   end
   def extract xmin,ymin,zmin,xmax,ymax,zmax
-    table = {}
-    get = ->(x,y,z){
-      @world[x,z,y] if (xmin..xmax).include?(x) && (ymin..ymax).include?(y) && (zmin..zmax).include?(z)
+    # table = {}
+    # get = ->(x,y,z){
+    #   @world[x,z,y] if (xmin..xmax).include?(x) && (ymin..ymax).include?(y) && (zmin..zmax).include?(z)
+    # }
+    block_at = ->x,y,z{
+      range = (0...16)
+      return nil unless [x,y,z].all?{|v|range.include?(v)}
+      break if z>5+3*Math.cos(0.2*x+0.3*y)+2*Math.sin(0.3*y-0.2*x)
+      if z+1>5+3*Math.cos(0.2*x+0.3*y)+2*Math.sin(0.3*y-0.2*x)
+        if (x+y)/4%2==0
+          Shape::Stairs.new (13*x+17*y+19*z)%256, (5*x+7*y+11*z)%16
+        else
+          Shape::Slab.new (13*x+17*y+19*z)%256, (5*x+7*y+11*z)%16
+        end
+      else
+        Shape::Block.new (13*x+17*y+19*z)%256, (5*x+7*y+11*z)%16
+      end
     }
-    (xmin..xmax).each{|x|
-      (ymin..ymax).each{|y|
-        (zmin..zmax).each{|z|
-          block = Shape.build get[x,y,z]
-          next unless block
-          pos = [x-(xmin+xmax)/2,y-(ymin+ymax)/2,z-(zmin+zmax)/2]
-          [[-1,0,0],[1,0,0],[0,-1,0],[0,1,0],[0,0,-1],[0,0,1]].each{|dx,dy,dz|
-            facing = Shape.build get[x+dx,y+dy,z+dz]
-            next if facing
-            @obj.quadface pos, [dx,dy,dz], [block.uv]*10
-          }
-        }
-      }
-    }
+    map3d={}
+    iterator = 16.times.to_a.repeated_permutation(3)
+    iterator.each{|x,y,z|map3d[[x,y,z]]=block_at[x,y,z]}
+    iterator.each{|x,y,z|map3d[[x,y,z]]&.build{|i,j,k|map3d[[x+i, y+j, z+k]]}}
+    iterator.each{|x,y,z|map3d[[x,y,z]]&.save(x-8,y-8,z-8,output: @obj)}
+
     @obj.data
   end
 end
