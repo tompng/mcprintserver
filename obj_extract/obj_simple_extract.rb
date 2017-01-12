@@ -14,13 +14,15 @@ module Shape
     def uv
       [(id%16*4+data%4+0.5)/64, 1-(id/16*4+data/4+0.5)/64]
     end
+  end
+  class Cube < Block
     def build &env
       @face = []
       3.times do |axis|
         [-1,1].each do |dir|
           vec = [0,0,0]
           vec[axis] = dir
-          if env.call(*vec).class != Block
+          unless Cube === env.call(*vec).class
             @face << vec
           end
         end
@@ -31,6 +33,66 @@ module Shape
         output.cubeface [x+0.5,y+0.5,z+0.5], [dx,dy,dz], [uv]*4
       end
     end
+  end
+  class TransparentCube < Cube;end
+  class Wall < Block
+    def connectable? block
+      !!block
+    end
+    def square_width
+      0.25
+    end
+    def wall_width
+      0.1
+    end
+    def build &env
+      dirs = [[-1,0],[1,0],[0,-1],[0,1]]
+      @connects = []
+      dirs.each do |dx, dy|
+        @connects << [dx, dy] if connectable? env.call(dx,dy,0)
+      end
+    end
+    def save x, y, z, output:
+      dirs = 6.times.map{|i|[0,0,0].tap{|a|a[i/2]=i%2*2-1}}
+      dirs.each do |dx, dy, dz|
+        output.cubeface [x+0.5,y+0.5,z+0.5], [dx,dy,dz], [uv]*4, xsize: square_width, ysize: square_width
+        @connects.each do |cx, cy|
+          s = (1-square_width)/2.0
+          t = square_width/2+s/2
+          xs = cx.nonzero? ? s : wall_width
+          ys = cy.nonzero? ? s : wall_width
+          output.cubeface [x+0.5+t*cx,y+0.5+t*cy,z+0.5], [dx,dy,dz], [uv]*4, xsize: xs, ysize: ys
+        end
+      end
+    end
+  end
+  class ThinWall < Wall
+    def connectable? block
+      Cube === block || ThinWall === block
+    end
+    def square_width;0.25;end
+    def wall_width;0.25;end
+  end
+  class StoneWall < Wall
+    def connectable? block
+      StoneWall === block || (Cube === block && !(TransparentCube === block))
+    end
+    def square_width;0.6;end
+    def wall_width;0.5;end
+  end
+  class FenceWall < Wall
+    def connectable? block
+      FenceWall === block || (Cube === block && !(TransparentCube === block))
+    end
+    def square_width;0.4;end
+    def wall_width;0.3;end
+  end
+  class FenceWall2 < Wall
+    def connectable? block
+      FenceWall2 === block || (Cube === block && !(TransparentCube === block))
+    end
+    def square_width;0.4;end
+    def wall_width;0.3;end
   end
   class Slab < Block
     def build &env
@@ -175,14 +237,12 @@ class OBJExtract
       range = (0...16)
       return nil unless [x,y,z].all?{|v|range.include?(v)}
       break if z>5+3*Math.cos(0.2*x+0.3*y)+2*Math.sin(0.3*y-0.2*x)
+      id, data = (13*x+17*y+19*z)%256, (5*x+7*y+11*z)%16
       if z+1>5+3*Math.cos(0.2*x+0.3*y)+2*Math.sin(0.3*y-0.2*x)
-        if (x+y)/4%2==0
-          Shape::Stairs.new (13*x+17*y+19*z)%256, (5*x+7*y+11*z)%16
-        else
-          Shape::Slab.new (13*x+17*y+19*z)%256, (5*x+7*y+11*z)%16
-        end
+        klass = [Shape::Stairs, Shape::ThinWall, Shape::Slab, Shape::StoneWall, Shape::FenceWall][(x+y)/4%5]
+        klass.new id, data
       else
-        Shape::Block.new (13*x+17*y+19*z)%256, (5*x+7*y+11*z)%16
+        Shape::Cube.new id, data
       end
     }
     map3d={}
