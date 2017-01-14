@@ -44,18 +44,18 @@ module Shape
     def build &env
       dirs = [[-1,0],[1,0],[0,-1],[0,1]]
       @connects = []
-      dirs.each do |dx, dy|
-        @connects << [dx, dy] if connectable? env.call(dx,dy,0)
+      dirs.each do |dx, dz|
+        @connects << [dx, dz] if connectable? env.call(dx,0,dz)
       end
     end
     def save x, y, z, output:
-      output.cube [x+0.5,y+0.5,z+0.5], [uv]*4, xsize: square_width, ysize: square_width
-      @connects.each do |cx, cy|
+      output.cube [x+0.5,y+0.5,z+0.5], [uv]*4, xsize: square_width, zsize: square_width
+      @connects.each do |cx, cz|
         s = (1-square_width)/2.0
         t = square_width/2+s/2
         xs = cx.nonzero? ? s : wall_width
-        ys = cy.nonzero? ? s : wall_width
-        output.cube [x+0.5+t*cx,y+0.5+t*cy,z+0.5], [uv]*4, xsize: xs, ysize: ys
+        zs = cz.nonzero? ? s : wall_width
+        output.cube [x+0.5+t*cx,y+0.5,z+0.5+t*cz], [uv]*4, xsize: xs, zsize: zs
       end
     end
   end
@@ -79,28 +79,20 @@ module Shape
     def connectable? block
       FenceGate === block || self.class == block.class || (Cube === block && !(TransparentCube === block))
     end
-    def square_width;WallWidth;end
-    def wall_width;SquareWidth;end
+    def square_width;SquareWidth;end
+    def wall_width;WallWidth;end
   end
   class FenceWall2 < FenceWall;end
   class FenceGate < Block
     def save x, y, z, output:
-      wxwy = [1, FenceWall::WallWidth]
-      wx, wy = @data.even? ? wxwy : wxwy.reverse
-      output.cube [x+0.5, y+0.5, z+0.5], [uv]*4, xsize: wx, ysize: wy
+      wxwz = [1, FenceWall::WallWidth]
+      wx, wz = @data.even? ? wxwz : wxwz.reverse
+      output.cube [x+0.5, y+0.5, z+0.5], [uv]*4, xsize: wx, zsize: wz
     end
   end
   class Slab < Block
-    def build &env
-      @upper=(@data&0x8)!=0
-      @face = [[-1,0,0],[1,0,0],[0,-1,0],[0,1,0]]
-      @face << [0,0,1] if !@upper || env.call(0,0,1).class != Block
-      @face << [0,0,-1] if @upper || env.call(0,0,-1).class != Block
-    end
     def save x, y, z, output:
-      @face.each do |dx, dy, dz|
-        output.cubeface [x+0.5,y+0.5,z+(@upper?0.75:0.25)], [dx,dy,dz], [uv]*4, zsize: 0.5
-      end
+      output.cube [x+0.5,y+(@data&8==0 ? 0.25 : 0.75),z+0.5], [uv]*4, ysize: 0.5
     end
   end
   class Stairs < Block
@@ -109,26 +101,26 @@ module Shape
       up = (@data&4)>0?0:1
       dirvecs = [[1,0], [-1,0], [0,1], [0,-1]]
       dvec = dirvecs[dir]
-      blockback = env.call(*dvec,0)
-      blockfront = env.call(*dvec.map(&:-@),0)
+      blockback = env.call(dvec[0],0,dvec[1])
+      blockfront = env.call(-dvec[0],0,-dvec[1])
       @shape = 2.times.map{2.times.map{[false,false]}}
-      4.times{|i|@shape[i%2][i/2][1-up]=true}
+      4.times{|i|@shape[i%2][1-up][i/2]=true}
       if Stairs === blockback && blockback.data&4==@data&4 && blockback.data&2!=@data&2
         dvec2 = dirvecs[blockback.data&3]
         dx=dvec[0]+dvec2[0]>0?1:0
-        dy=dvec[1]+dvec2[1]>0?1:0
-        @shape[dx][dy][up]=true
+        dz=dvec[1]+dvec2[1]>0?1:0
+        @shape[dx][up][dz]=true
       elsif Stairs === blockfront && blockfront.data&4==@data&4 && blockfront.data&2!=@data&2
         dvec2 = dirvecs[blockfront.data&3]
         dx=dvec[0]+dvec2[0]>0?0:1
-        dy=dvec[1]+dvec2[1]>0?0:1
-        4.times{|i|@shape[i%2][i/2][up]=true}
-        @shape[dx][dy][up]=false
+        dz=dvec[1]+dvec2[1]>0?0:1
+        4.times{|i|@shape[i%2][up][i/2]=true}
+        @shape[dx][up][dz]=false
       else
         2.times{|i|
           dx=(dvec[0].nonzero?||(2*i-1))>0?1:0
-          dy=(dvec[1].nonzero?||(2*i-1))>0?1:0
-          @shape[dx][dy][up]=true
+          dz=(dvec[1].nonzero?||(2*i-1))>0?1:0
+          @shape[dx][up][dz]=true
         }
       end
     end
@@ -299,5 +291,9 @@ class OBJExtract
   end
 end
 
-objext = OBJExtract.new('../spigot/world/region/r.0.0.mca')
-File.write '../public/assets/block.obj', objext.extract(16,66-12,16,31,81-12,31)
+# objext = OBJExtract.new('../spigot/world/region/r.0.0.mca')
+# File.write '../public/assets/block.obj', objext.extract(16,66-12,16,31,81-12,31)
+
+
+objext = OBJExtract.new('/Users/tomoya/Library/Application Support/minecraft/saves/New World/region/r.-1.0.mca')
+File.write '../public/assets/block.obj', objext.extract(512-224,65,34,512-224+15,65+15,34+15)
