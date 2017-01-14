@@ -1,6 +1,6 @@
 require_relative '../mc_world/world'
 require 'chunky_png'
-
+require 'set'
 module Shape
   def self.build mcblock
     return nil unless mcblock
@@ -11,6 +11,8 @@ module Shape
     def initialize id, data
       @id, @data = id, data
     end
+    def build;end
+    def save x,y,z,output:;end
     def uv
       [(id%16*4+data%4+0.5)/64, 1-(id/16*4+data/4+0.5)/64]
     end
@@ -36,15 +38,9 @@ module Shape
   end
   class TransparentCube < Cube;end
   class Wall < Block
-    def connectable? block
-      !!block
-    end
-    def square_width
-      0.25
-    end
-    def wall_width
-      0.1
-    end
+    def connectable? block;!!block;end
+    def square_width;0.25;end
+    def wall_width;0.125;end
     def build &env
       dirs = [[-1,0],[1,0],[0,-1],[0,1]]
       @connects = []
@@ -53,16 +49,13 @@ module Shape
       end
     end
     def save x, y, z, output:
-      dirs = 6.times.map{|i|[0,0,0].tap{|a|a[i/2]=i%2*2-1}}
-      dirs.each do |dx, dy, dz|
-        output.cubeface [x+0.5,y+0.5,z+0.5], [dx,dy,dz], [uv]*4, xsize: square_width, ysize: square_width
-        @connects.each do |cx, cy|
-          s = (1-square_width)/2.0
-          t = square_width/2+s/2
-          xs = cx.nonzero? ? s : wall_width
-          ys = cy.nonzero? ? s : wall_width
-          output.cubeface [x+0.5+t*cx,y+0.5+t*cy,z+0.5], [dx,dy,dz], [uv]*4, xsize: xs, ysize: ys
-        end
+      output.cube [x+0.5,y+0.5,z+0.5], [uv]*4, xsize: square_width, ysize: square_width
+      @connects.each do |cx, cy|
+        s = (1-square_width)/2.0
+        t = square_width/2+s/2
+        xs = cx.nonzero? ? s : wall_width
+        ys = cy.nonzero? ? s : wall_width
+        output.cube [x+0.5+t*cx,y+0.5+t*cy,z+0.5], [uv]*4, xsize: xs, ysize: ys
       end
     end
   end
@@ -75,24 +68,27 @@ module Shape
   end
   class StoneWall < Wall
     def connectable? block
-      StoneWall === block || (Cube === block && !(TransparentCube === block))
+      FenceGate === block || StoneWall === block || (Cube === block && !(TransparentCube === block))
     end
-    def square_width;0.6;end
+    def square_width;0.625;end
     def wall_width;0.5;end
   end
   class FenceWall < Wall
+    WallWidth = 0.25
+    SquareWidth = 0.375
     def connectable? block
-      FenceWall === block || (Cube === block && !(TransparentCube === block))
+      FenceGate === block || self.class == block.class || (Cube === block && !(TransparentCube === block))
     end
-    def square_width;0.4;end
-    def wall_width;0.3;end
+    def square_width;WallWidth;end
+    def wall_width;SquareWidth;end
   end
-  class FenceWall2 < Wall
-    def connectable? block
-      FenceWall2 === block || (Cube === block && !(TransparentCube === block))
+  class FenceWall2 < FenceWall;end
+  class FenceGate < Block
+    def save x, y, z, output:
+      wxwy = [1, FenceWall::WallWidth]
+      wx, wy = @data.even? ? wxwy : wxwy.reverse
+      output.cube [x+0.5, y+0.5, z+0.5], [uv]*4, xsize: wx, ysize: wy
     end
-    def square_width;0.4;end
-    def wall_width;0.3;end
   end
   class Slab < Block
     def build &env
@@ -147,6 +143,16 @@ module Shape
       end
     end
   end
+  module Type
+    Slabs = Set.new [44,126,182,205]
+    Stairs = Set.new [53,67,108,109,114,128,134,135,136,156,163,164,180,203]
+    ThinWalls = Set.new [101,102,160]
+    StoneWalls = Set.new [139]
+    FenceWalls = Set.new [85,188,189,190,191,192]
+    FenceWalls2 = Set.new [113]
+    TransparentCubes = Set.new []
+    Cubes = Set.new []
+  end
 end
 
 class OBJ
@@ -194,6 +200,11 @@ class OBJ
     @faces << [[*a,n],[*b,n],[*c,n]]
   end
 
+  def cube pos, texture_uvs, option={}
+    dirs = 6.times.map{|i|[0,0,0].tap{|a|a[i/2]=i%2*2-1}}
+    dirs.each { |dir| cubeface pos, dir, texture_uvs, option }
+  end
+
   def cubeface pos, dir, texture_uvs, size: nil, xsize: 1, ysize: 1, zsize: 1
     xsize = ysize = zsize = size if size
     val, axis = dir.each.with_index.find{ |val, axis| val.nonzero? }
@@ -237,16 +248,34 @@ class OBJExtract
       range = (0...16)
       return nil unless [x,y,z].all?{|v|range.include?(v)}
       b = get.call xmin+x,ymin+y,zmin+z
-      Shape::Cube.new b.id, b.data if b
+      return nil unless b
+      if Shape::Type::Slabs.include? b.id
+        Shape::Slab.new b.id, b.data
+      elsif Shape::Type::Stairs.include? b.id
+        Shape::Stairs.new b.id, b.data
+      elsif Shape::Type::ThinWalls.include? b.id
+        Shape::ThinWall.new b.id, b.data
+      elsif Shape::Type::StoneWalls.include? b.id
+        Shape::StoneWall.new b.id, b.data
+      elsif Shape::Type::FenceWalls.include? b.id
+        Shape::FenceWall.new b.id, b.data
+      elsif Shape::Type::FenceWalls2.include? b.id
+        Shape::FenceWall2.new b.id, b.data
+      elsif Shape::Type::TransparentCubes.include? b.id
+        Shape::TransparentCube.new b.id, b.data
+      elsif Shape::Type::Cubes.include? b.id
+        Shape::Cube.new b.id, b.data
+      end
+
     }
 
-    block_at2 = ->x,y,z{
+    block_at = ->x,y,z{
       range = (0...16)
       return nil unless [x,y,z].all?{|v|range.include?(v)}
       break if z>5+3*Math.cos(0.2*x+0.3*y)+2*Math.sin(0.3*y-0.2*x)
       id, data = (13*x+17*y+19*z)%256, (5*x+7*y+11*z)%16
       if z+1>5+3*Math.cos(0.2*x+0.3*y)+2*Math.sin(0.3*y-0.2*x)
-        klass = [Shape::Stairs, Shape::ThinWall, Shape::Slab, Shape::StoneWall, Shape::FenceWall][(x+y)/4%5]
+        klass = [Shape::Stairs, Shape::ThinWall, Shape::Slab, Shape::StoneWall, Shape::FenceWall, Shape::FenceGate][(x+y)/4%6]
         klass.new id, data
       else
         Shape::Cube.new id, data
