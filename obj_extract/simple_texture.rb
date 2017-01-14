@@ -20,6 +20,35 @@ images.define_singleton_method :get do |url|
   self[url] ||= ChunkyPNG::Image.from_string Net::HTTP.get(URI.parse(domain+url))
 end
 
+overrides = {
+  [[125,0],[126,0],[53],[85],[107]] => [5,0],
+  [[125,1],[126,1],[134],[183],[188]] => [5,1],
+  [[125,2],[126,2],[135],[184],[189]] => [5,2],
+  [[125,3],[126,3],[136],[185],[190]] => [5,3],
+  [[125,4],[126,4],[163],[186],[191]] => [5,4],
+  [[125,5],[126,5],[164],[187],[192]] => [5,5],
+  [[179],[180],[182]] => [179],
+  [[201],[202],[203],[204],[205]] => [201],
+  [[67],[139,0]] => [4],
+  [[108],[44,4]] => [45],
+  [[109],[44,5]] => [98],
+  [[113],[44,6],[114]] => [112],
+  [[109],[44,7],[155],[156]] => [155]
+}.each do |keys, dst|
+  dstid, dstdata = dst
+  dstblock = blocks[[dstid, dstdata||0]]
+  keys.each do |id, data|
+    if data
+      blocks[[id,data]]=dstblock
+    else
+      16.times{|d|blocks[[id,d]]=dstblock}
+    end
+  end
+end
+
+
+
+
 piximage = ChunkyPNG::Image.new 64, 64
 [*0...256].product([*0...16]) do |id, data|
   x = id%16*4+data%4
