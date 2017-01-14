@@ -42,4 +42,4 @@ piximage = ChunkyPNG::Image.new 64, 64
   piximage[x,y] = color[0]<<24|color[1]<<16|color[2]<<8|(weight==0?0:0xff)
 end
 
-piximage.save 'texture2.png'
+piximage.save 'texture.png'
