@@ -22,7 +22,7 @@ module Shape
         [-1,1].each do |dir|
           vec = [0,0,0]
           vec[axis] = dir
-          unless Cube === env.call(*vec).class
+          unless Cube === env.call(*vec)
             @face << vec
           end
         end
@@ -226,14 +226,21 @@ end
 class OBJExtract
   def initialize file
     @obj = OBJ.new
-    # @world = MCWorld::World.new file: file
+    @world = MCWorld::World.new file: file
   end
   def extract xmin,ymin,zmin,xmax,ymax,zmax
-    # table = {}
-    # get = ->(x,y,z){
-    #   @world[x,z,y] if (xmin..xmax).include?(x) && (ymin..ymax).include?(y) && (zmin..zmax).include?(z)
-    # }
+    table = {}
+    get = ->(x,y,z){
+      @world[x,z,y] if (xmin..xmax).include?(x) && (ymin..ymax).include?(y) && (zmin..zmax).include?(z)
+    }
     block_at = ->x,y,z{
+      range = (0...16)
+      return nil unless [x,y,z].all?{|v|range.include?(v)}
+      b = get.call xmin+x,ymin+y,zmin+z
+      Shape::Cube.new b.id, b.data if b
+    }
+
+    block_at2 = ->x,y,z{
       range = (0...16)
       return nil unless [x,y,z].all?{|v|range.include?(v)}
       break if z>5+3*Math.cos(0.2*x+0.3*y)+2*Math.sin(0.3*y-0.2*x)
