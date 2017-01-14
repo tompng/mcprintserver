@@ -150,8 +150,16 @@ module Shape
     StoneWalls = Set.new [139]
     FenceWalls = Set.new [85,188,189,190,191,192]
     FenceWalls2 = Set.new [113]
-    TransparentCubes = Set.new []
-    Cubes = Set.new []
+    TransparentCubes = Set.new [
+      8,9,10,11,18,20,26,29,33,46,51,52,54,60,79,81,86,89,91,95,
+      103,116,118,120,123,124,130,138,145,146,154,161,169,199,
+      200,208,212
+    ]
+    Hiddens = Set.new [
+      6,27,28,30,31,32,34,37,38,39,40,50,55,59,63,64,65,66,68,69,70,71,72,75,76,77,78,83,90,92,93,94,96,
+      104,105,106,111,115,117,119,122,127,131,132,140,141,142,143,144,147,148,149,150,151,157,166,167,171,175,176,177,178,193,194,195,196,197,198,
+      207,209,217,*(218..254)
+    ]
   end
 end
 
@@ -263,13 +271,13 @@ class OBJExtract
         Shape::FenceWall2.new b.id, b.data
       elsif Shape::Type::TransparentCubes.include? b.id
         Shape::TransparentCube.new b.id, b.data
-      elsif Shape::Type::Cubes.include? b.id
+      elsif !Shape::Type::Hiddens.include?(b.id)
         Shape::Cube.new b.id, b.data
       end
 
     }
 
-    block_at = ->x,y,z{
+    block_at2 = ->x,y,z{
       range = (0...16)
       return nil unless [x,y,z].all?{|v|range.include?(v)}
       break if z>5+3*Math.cos(0.2*x+0.3*y)+2*Math.sin(0.3*y-0.2*x)
