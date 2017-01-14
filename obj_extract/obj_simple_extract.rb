@@ -245,8 +245,6 @@ class OBJExtract
       @world[x,z,y] if (xmin..xmax).include?(x) && (ymin..ymax).include?(y) && (zmin..zmax).include?(z)
     }
     block_at = ->x,y,z{
-      range = (0...16)
-      return nil unless [x,y,z].all?{|v|range.include?(v)}
       b = get.call xmin+x,ymin+y,zmin+z
       return nil unless b
       if Shape::Type::Slabs.include? b.id
@@ -270,9 +268,7 @@ class OBJExtract
     }
 
     block_at2 = ->x,y,z{
-      range = (0...16)
-      return nil unless [x,y,z].all?{|v|range.include?(v)}
-      break if z>5+3*Math.cos(0.2*x+0.3*y)+2*Math.sin(0.3*y-0.2*x)
+      return nil if z>5+3*Math.cos(0.2*x+0.3*y)+2*Math.sin(0.3*y-0.2*x)
       id, data = (13*x+17*y+19*z)%256, (5*x+7*y+11*z)%16
       if z+1>5+3*Math.cos(0.2*x+0.3*y)+2*Math.sin(0.3*y-0.2*x)
         klass = [Shape::Stairs, Shape::ThinWall, Shape::Slab, Shape::StoneWall, Shape::FenceWall, Shape::FenceGate][(x+y)/4%6]
@@ -282,10 +278,10 @@ class OBJExtract
       end
     }
     map3d={}
-    iterator = 16.times.to_a.repeated_permutation(3)
+    iterator = [*0..xmax-xmin].product [*0..ymax-ymin], [*0..zmax-zmin]
     iterator.each{|x,y,z|map3d[[x,y,z]]=block_at[x,y,z]}
     iterator.each{|x,y,z|map3d[[x,y,z]]&.build{|i,j,k|map3d[[x+i, y+j, z+k]]}}
-    iterator.each{|x,y,z|map3d[[x,y,z]]&.save(x-8,y-8,z-8,output: @obj)}
+    iterator.each{|x,y,z|map3d[[x,y,z]]&.save(x-(xmax-xmin)*0.5,y-(ymax-ymin)*0.5,z-(zmax-zmin)*0.5,output: @obj)}
 
     @obj.data
   end
@@ -296,4 +292,4 @@ end
 
 
 objext = OBJExtract.new('/Users/tomoya/Library/Application Support/minecraft/saves/New World/region/r.-1.0.mca')
-File.write '../public/assets/block.obj', objext.extract(512-224,65,34,512-224+15,65+15,34+15)
+File.write '../public/assets/block.obj', objext.extract(512-228,64,30,512-228+20,64+10,30+16)
