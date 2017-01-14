@@ -37,9 +37,14 @@ function init() {
 	backLight.shadowCameraRight = d;
 	backLight.shadowCameraTop = d;
 	backLight.shadowCameraBottom = -d;
-	var directionalLightHelper = new THREE.CameraHelper(backLight.shadow.camera);
-	// scene.add( directionalLightHelper);
 	scene.add(backLight);
+
+	light2 = new THREE.DirectionalLight(0xffffff, 0.5)
+	light2.position.set(1,2,3).normalize()
+	scene.add(light2)
+	light3 = new THREE.DirectionalLight(0xffffff, 0.25)
+	light3.position.set(-1,-2,-3).normalize()
+	scene.add(light3)
   /* Model */
   var mtlLoader = new THREE.MTLLoader();
   mtlLoader.setBaseUrl('assets/');
