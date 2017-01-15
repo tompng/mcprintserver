@@ -31,6 +31,12 @@ class Regions
     @area_users
   end
 
+  def update area_users
+    area_users.each do |key, users|
+      @area_users[key] = users if @area_users[key]
+    end
+  end
+
   def register key, users
     @area_users[key] = users if @area_users[key]
   end
@@ -245,8 +251,12 @@ end
 
 set :public_folder, './public'
 
+def valid_user_id? user_id
+  user_id =~ /\A[a-zA-Z0-9_-]+\z/
+end
+
 user_list_op = lambda do |area_id, user_id, add:|
-  next unless user_id =~ /\A[a-zA-Z0-9_-]+\z/
+  next unless valid_user_id? user_id
   users = regions.area_users[area_id]
   if add
     users |= [user_id]
@@ -261,7 +271,7 @@ end
 
 post '/tp' do
   user_id = params[:user_id]
-  next unless user_id =~ /\A[a-zA-Z0-9_-]+\z/
+  next unless valid_user_id user_id
   pos = regions.area_position params[:area_id]
   server.tp user_id, pos if pos
   content_type :json
@@ -269,6 +279,16 @@ post '/tp' do
 end
 
 get '/user_list' do
+  content_type :json
+  regions.area_users.to_json
+end
+
+post '/user_list' do
+  area_users = {}
+  params[:user_list].each do |key, value|
+    area_users[key] = values.map { |user_id| valid_user_id? user_id }
+  end
+  regions.update area_users
   content_type :json
   regions.area_users.to_json
 end
