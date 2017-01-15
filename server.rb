@@ -9,7 +9,7 @@ require './obj_extract/obj_extract'
 class Regions
   def initialize
     @areas = JSON.parse File.read('areas.json')
-    @area_users = {}
+    @area_users = JSON.parse File.read('area_users.json') rescue {}
     @areas.each do |area|
       cx = area['print']['min']['x']/16
       cz = area['print']['min']['z']/16
@@ -106,6 +106,7 @@ class Regions
       regions.merge! area_regions(area)
     end
     regions.merge! default_regions
+    File.write 'area_users.json', @area_users.to_json
     File.write 'spigot/plugins/WorldGuard/worlds/world/regions.yml', JSON.parse({regions: regions}.to_json).to_yaml
   end
 
