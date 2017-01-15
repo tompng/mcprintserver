@@ -1,5 +1,4 @@
 require_relative '../mc_world/world'
-require 'chunky_png'
 require 'set'
 module Shape
   def self.build mcblock
@@ -264,19 +263,19 @@ class OBJExtract
       elsif !Shape::Type::Hiddens.include?(b.id)
         Shape::Cube.new b.id, b.data
       end
-
     }
 
-    block_at2 = ->x,y,z{
-      return nil if z>5+3*Math.cos(0.2*x+0.3*y)+2*Math.sin(0.3*y-0.2*x)
-      id, data = (13*x+17*y+19*z)%256, (5*x+7*y+11*z)%16
-      if z+1>5+3*Math.cos(0.2*x+0.3*y)+2*Math.sin(0.3*y-0.2*x)
-        klass = [Shape::Stairs, Shape::ThinWall, Shape::Slab, Shape::StoneWall, Shape::FenceWall, Shape::FenceGate][(x+y)/4%6]
-        klass.new id, data
-      else
-        Shape::Cube.new id, data
-      end
-    }
+    # block_at2 = ->x,y,z{
+    #   yh=5+3*Math.cos(0.2*x+0.3*z)+2*Math.sin(0.3*z-0.2*x)
+    #   return nil if y>yh
+    #   id, data = (13*x+17*y+19*z)%256, (5*x+7*y+11*z)%16
+    #   if y+1>yh
+    #     klass = [Shape::Stairs, Shape::ThinWall, Shape::Slab, Shape::StoneWall, Shape::FenceWall, Shape::FenceGate][(x+y+z)/3%6]
+    #     klass.new id, data
+    #   else
+    #     Shape::Cube.new id, data
+    #   end
+    # }
     map3d={}
     iterator = [*0..xmax-xmin].product [*0..ymax-ymin], [*0..zmax-zmin]
     iterator.each{|x,y,z|map3d[[x,y,z]]=block_at[x,y,z]}
@@ -287,9 +286,10 @@ class OBJExtract
   end
 end
 
-# objext = OBJExtract.new('../spigot/world/region/r.0.0.mca')
-# File.write '../public/assets/block.obj', objext.extract(16,66-12,16,31,81-12,31)
 
+__END__
+objext = OBJExtract.new('../spigot/world/region/r.0.0.mca')
+File.write '../public/assets/block.obj', objext.extract(16,66-12,16,31,81-12,31)
 
 objext = OBJExtract.new('/Users/tomoya/Library/Application Support/minecraft/saves/New World/region/r.-1.0.mca')
 File.write '../public/assets/block.obj', objext.extract(512-228,64,30,512-228+20,64+10,30+16)
