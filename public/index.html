@@ -65,7 +65,7 @@ function show(key){
   userList[key].forEach(function(name){
     createUserElement(key, name)
   })
-  $('.preview').attr({href: '/stl_viewer.html?area_id='+key})
+  $('.preview').attr({href: '/obj_viewer.html?area_id='+key})
   $('.area-info').show()
 }
 function render(){

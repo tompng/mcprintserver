@@ -17,6 +17,8 @@ onload=function(){
 }
 
 function init() {
+	var matches=location.search.match(/area_id=\d+_\d+/)
+	var url = matches ? '/obj?'+matches[0]+'&' : '/assets/block.obj?'+Math.random()
   container = document.createElement('div');
   document.body.appendChild(container);
   /* Camera */
@@ -50,7 +52,6 @@ function init() {
   mtlLoader.setBaseUrl('assets/');
   mtlLoader.setPath('assets/');
 	var mtlfile = 'block.mtl?'+Math.random()
-	var objfile = 'block.obj?'+Math.random()
   mtlLoader.load(mtlfile, function (mtl) {
     mtl.preload();
 		for(var i in mtl.materials){
@@ -59,8 +60,7 @@ function init() {
 		}
     var objLoader = new THREE.OBJLoader();
     objLoader.setMaterials(mtl);
-    objLoader.setPath('assets/');
-    objLoader.load(objfile, function (object) {
+    objLoader.load(url, function (object) {
 			window.oobbjj=object
 			object.children[0].castShadow = true
 			object.children[0].receiveShadow = true

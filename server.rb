@@ -5,6 +5,7 @@ require 'json'
 require 'sinatra'
 require 'yaml'
 require './stl_extract'
+require './obj_extract/obj_extract'
 class Regions
   def initialize
     @areas = JSON.parse File.read('areas.json')
@@ -282,6 +283,17 @@ post '/user_list_remove' do
   user_list_op.call params[:area_id], params[:user_id], add: false
   content_type :json
   regions.area_users.to_json
+end
+
+get '/obj' do
+  area = regions.area params[:area_id]
+  next unless area
+  server.save
+  sleep 4
+  OBJExtract.new('spigot/world/region/r.0.0.mca').extract(
+    *%w(x y z).map{|axis|area['print']['min'][axis]},
+    *%w(x y z).map{|axis|area['print']['max'][axis]}
+  )
 end
 
 get '/stl' do
