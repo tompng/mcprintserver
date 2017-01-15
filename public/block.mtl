@@ -1,0 +1,3 @@
+newmtl block
+  map_Ka texture.png
+  map_Kd texture.png

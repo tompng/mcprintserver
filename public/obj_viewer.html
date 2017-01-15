@@ -18,7 +18,7 @@ onload=function(){
 
 function init() {
 	var matches=location.search.match(/area_id=\d+_\d+/)
-	var url = matches ? '/obj?'+matches[0]+'&' : '/assets/block.obj?'+Math.random()
+	var url = matches ? '/obj?'+matches[0]+'&' : '/block.obj?'+Math.random()
   container = document.createElement('div');
   document.body.appendChild(container);
   /* Camera */
@@ -49,8 +49,8 @@ function init() {
 	scene.add(light3)
   /* Model */
   var mtlLoader = new THREE.MTLLoader();
-  mtlLoader.setBaseUrl('assets/');
-  mtlLoader.setPath('assets/');
+  mtlLoader.setBaseUrl('/');
+  mtlLoader.setPath('/');
 	var mtlfile = 'block.mtl?'+Math.random()
   mtlLoader.load(mtlfile, function (mtl) {
     mtl.preload();
