@@ -10,6 +10,12 @@ def image world
   size=512
   img = ChunkyPNG::Image.new size, size
   img2 = ChunkyPNG::Image.new size, size
+  colormap = ChunkyPNG::Image.from_file 'public/texture.png'
+  color = ->(id, data){
+    rgba = colormap[id%16*4+data%4, id/16*4+data/4]
+    a,b,g,r =(rgba+0x100000000).digits(0x100)
+    [r,g,b]
+  }
   map = []
   size.times.to_a.repeated_permutation(2) do |x,z|
     p x if z==0
@@ -35,8 +41,8 @@ def image world
     size.times.reverse_each{|z|
       h, block,w = map[x][z]
       br = darkh[prev - h]
-      rgb = [block.id*123, block.id*162+block.data*241, block.id*172+193*block.data]
-      r, g, b = rgb.map{|a|((a&0xff)*br).to_i}
+      rgb = color[block&.id||0, block&.data||0]
+      r, g, b = rgb.map{|a|a*br}
       if w>0
         d=0.5*Math.exp(-w/8.0)
         r=0x10+r*d
