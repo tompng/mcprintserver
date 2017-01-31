@@ -18,7 +18,7 @@ class Regions
     end
   end
 
-  def build_walls server
+  def build_walls server, user
     @areas.each do |area|
       pmin = area['print']['min']
       pmax = area['print']['max']
@@ -27,6 +27,8 @@ class Regions
       x0, x1 = pmin['x']-1, pmax['x']+1
       y0, y1 = pmin['y']-1, pmax['y']+1
       z0, z1 = pmin['z']-1, pmax['z']+1
+      server.command "tp #{user} #{(x0+x1)/2} #{(y0+y1)/2}, #{z1+16}", /#{user}/
+      sleep 1
       coords = [[x0,z0],[x1,z0],[x1,z1],[x0,z1]]
       coords.each do |x,z|
         server.command "fill #{x} #{y0} #{z} #{x} #{y1} #{z} bedrock"
