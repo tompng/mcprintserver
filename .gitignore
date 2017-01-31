@@ -1,7 +1,9 @@
 spigot
+spigot_build
 *.png
 *.json
 *.obj
 *.stl
 *.mtl
+*.zip
 mc_world
