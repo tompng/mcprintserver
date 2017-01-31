@@ -18,6 +18,41 @@ class Regions
     end
   end
 
+  def build_walls server
+    @areas.each do |area|
+      pmin = area['print']['min']
+      pmax = area['print']['max']
+      amin = area['area']['min']
+      amax = area['area']['max']
+      x0, x1 = pmin['x']-1, pmax['x']+1
+      y0, y1 = pmin['y']-1, pmax['y']+1
+      z0, z1 = pmin['z']-1, pmax['z']+1
+      coords = [[x0,z0],[x1,z0],[x1,z1],[x0,z1]]
+      coords.each do |x,z|
+        server.command "fill #{x} #{y0} #{z} #{x} #{y1} #{z} bedrock"
+      end
+      coords.zip(coords.rotate(1)).each do |(xa,za),(xb,zb)|
+        server.command "fill #{xa} #{y1} #{za} #{xb} #{y1} #{zb} bedrock"
+      end
+      server.command "fill #{x0} #{amin['y']} #{z0} #{x1} #{pmin['y']} #{z1} bedrock"
+
+      x0, x1 = amin['x']-1, amax['x']+1
+      y0, y1 = amin['y']-1, amax['y']+1
+      z0, z1 = amin['z']-1, amax['z']+1
+      coords = [[x0,z0],[x1,z0],[x1,z1],[x0,z1]]
+      server.command "fill #{x0} #{y0} #{z0} #{x1} #{y0} #{z1} bedrock"
+      server.command "fill #{x0} #{y1} #{z0} #{x1} #{y1} #{z1} structure_void"
+      coords.zip(coords.rotate(1)).each do |(xa,za),(xb,zb)|
+        %w(air double_plant tallgrass leaves yellow_flower red_flower log reeds pumpkin).each do |block|
+          server.command "fill #{xa} #{y0} #{za} #{xb} #{y1} #{zb} structure_void 0 replace #{block}"
+        end
+        %w(stone sand dirt grass water lava flowing_water flowing_lava gravel iron_ore coal_ore sandstone).each do |block|
+          server.command "fill #{xa} #{y0} #{za} #{xb} #{y1} #{zb} bedrock 0 replace #{block}"
+        end
+      end
+    end
+  end
+
   def areas_by_user user
     @area_users.select{|name, users| users.include? user}.keys.map{|key|area key}
   end
@@ -148,6 +183,12 @@ class Server
       @io = IO.popen "java -Xms1024M -Xmx1024M -jar #{jarname} nogui", 'r+'
       at_exit { @io.close }
     end
+    loop do
+      s = @io.gets
+      break unless s
+      puts s
+      break if s =~ /Done/
+    end
     Thread.new do
       begin
       loop do
@@ -169,6 +210,7 @@ class Server
       begin
         loop do
           s = @io.gets
+          break unless s
           puts s
           @watch.each do |pattern, block|
             Thread.new{block.call s} if pattern =~ s
@@ -350,5 +392,7 @@ server.command 'gamerule doDaylightCycle false'
 server.command 'time set 6000'
 regions.save
 server.rg_reload
+
+binding.pry
 
 Sinatra::Application.run!
