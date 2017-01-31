@@ -4,6 +4,7 @@ require 'pry'
 require 'json'
 require 'sinatra'
 require 'yaml'
+require 'timeout'
 require './stl_extract'
 require './obj_extract/obj_extract'
 class Regions
@@ -143,14 +144,19 @@ class Server
     Dir.chdir 'spigot' do
       old_pid = `pgrep -f spigot`.to_i
       `kill -INT #{old_pid}` if old_pid > 0
-      @io = IO.popen 'java -jar spigot-1.10.2.jar nogui', 'r+'
+      jarname = Dir.glob("spigot*.jar").first
+      @io = IO.popen "java -Xms1024M -Xmx1024M -jar #{jarname} nogui", 'r+'
       at_exit { @io.close }
     end
     Thread.new do
       begin
       loop do
         msg, block, callback = @command_queue.deq
-        callback << [_command(msg, &block)]
+        if block && callback
+          callback << _command(msg, &block)
+        else
+          _command msg
+        end
       end
       rescue=>e
         p e
@@ -195,14 +201,19 @@ class Server
   end
 
   def tp name, x:, y: 80, z:
-    command "tp #{name} #{x} #{y} #{z}", /^\[[^\]]+\]: (Teleported|The entity UUID provided is in an invalid format)/
+    command "tp #{name} #{x} #{y} #{z}"
   end
 
   def command msg, pattern=nil, &block
     block = ->s{pattern.match s} if pattern
-    cb = Queue.new
-    @command_queue << [msg, block, cb]
-    cb.deq
+    if block
+      cb = Queue.new
+      @command_queue << [msg, block, cb]
+      cb.deq
+    else
+      @command_queue << [msg]
+      nil
+    end
   end
 
   private
@@ -214,15 +225,20 @@ class Server
     end
     @io.puts msg
     result = nil
-    loop do
-      result = block.call @queue.deq
-      break if result
+    Timeout.timeout 4 do
+      loop do
+        result = block.call @queue.deq
+        break if result
+      end
     end
+    result
+  rescue => e
+    :timeout
+  ensure
     @mutex.synchronize do
       @queue = nil
     end
     p :exec_done
-    result
   end
 end
 
@@ -327,5 +343,11 @@ get '/stl' do
     *%w(x y z).map{|axis|area['print']['max'][axis]}
   )
 end
+
+server.command 'worldborder center 255 255'
+server.command 'worldborder set 640 640'
+server.command 'gamerule doDaylightCycle false'
+server.command 'time set 6000'
+server.rg_reload
 
 Sinatra::Application.run!
