@@ -348,6 +348,7 @@ server.command 'worldborder center 255 255'
 server.command 'worldborder set 640 640'
 server.command 'gamerule doDaylightCycle false'
 server.command 'time set 6000'
+regions.save
 server.rg_reload
 
 Sinatra::Application.run!
