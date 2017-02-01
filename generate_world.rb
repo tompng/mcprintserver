@@ -91,7 +91,7 @@ img.save 'tmp.png'
 
 world = MCWorld::World.new x:0, z:0
 tallgrassnoise = noise size, 32
-biomes = noise size, 64
+biomes = noise size, 32
 
 gen_tree = ->x,z,y,oak{
   if oak
@@ -134,11 +134,13 @@ gen_tree = ->x,z,y,oak{
         plant = tallgrass
       else
         plants = [MCWorld::Block::Dandelion, MCWorld::Block::Poppy, MCWorld::Block::Poppy[3], MCWorld::Block::Poppy[8]]
-        if biomes[x][z] > 0
+        types = [biomes[x][z], biomes[x-64][128-z], biomes[512-x][z-256], biomes[512-z][x-256]]
+        case types.index types.max
+        when 0
           plant = plants.sample
-        elsif biomes[x-64][128-z] > 0.5
+        when 1
           plant = [*(4..7).map{|i|MCWorld::Block::Poppy[i]}].sample
-        elsif biomes[512-x][z-256] > 0
+        when 2
           plant = [tallgrass, MCWorld::Block::Poppy[2]].sample
         else
           plant = [tallgrass, MCWorld::Block::Poppy[1]].sample
