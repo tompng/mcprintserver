@@ -1,7 +1,14 @@
 #! /bin/sh
-# install ruby
-
-# install git
+# install git ruby
+yum install -y git gcc gcc-c++ openssl-devel readline-devel
+git clone git://github.com/sstephenson/rbenv.git ~/.rbenv
+echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
+echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
+exec $SHELL -l
+git clone git://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build
+rbenv install 2.3.0
+rbenv global 2.3.0
+gem install bundler
 
 git clone https://github.com/tompng/mcprintserver.git
 cd mcprintserver
