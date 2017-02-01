@@ -30,4 +30,4 @@ mkdir plugins
 curl -L 'https://dev.bukkit.org/projects/worldedit/files/latest' -H 'User-Agent: Mozilla/5.0' > plugins/worldedit.jar
 curl -L 'https://dev.bukkit.org/projects/worldguard/files/latest' -H 'User-Agent: Mozilla/5.0' > plugins/worldguard.jar
 
-cp server.properties spigot/server.properties
+cp ../server.properties server.properties
