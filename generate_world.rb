@@ -165,7 +165,7 @@ def gen_chunk arr, world
     cmin, cmax = cheights.minmax
     amin = aheights.min
     next if cmax<63||cmin<62||cmax-cmin>4
-    chunkinfo[[i,j]] = {x: i*16, z: j*16, cmin: cmin-1, cmax: cmax-1, amin: amin-1}
+    chunkinfo[[i,j]] = {x: i*16, z: j*16, cmin: cmin, cmax: cmax, amin: amin}
   end
   chunks = chunkinfo.values.select{|c|c[:cmax]>=63&&c[:cmin]>=62&&c[:cmax]-c[:cmin]<=4}.shuffle.sort_by{|a|a[:cmax]-a[:cmin]}
   occupied = {}
@@ -210,27 +210,11 @@ def gen_chunk arr, world
     end
     (8-size/2-offset...8+size/2+offset).to_a.repeated_permutation(2) do |i,j|
       world[x+i,z+j,amin-1]=MCWorld::Block::Bedrock
-      world[x+i,z+j,cmin+size+offset-1]=void_block
-    end
-    fill = ->(x,z){
-      (amin..cmin+size+offset).each do |y|
-        id = world[x,z,y]&.id
-        if block_ids.include?(id) || id == MCWorld::Block::StillWater.id
-          world[x,z,y] = MCWorld::Block::Bedrock
-        else
-          world[x,z,y] = void_block
-        end
-      end
-    }
-    (-offset...size+offset).each do |i|
-      fill.call x+i, z-offset
-      fill.call x+i, z+size+offset-1
-      fill.call x-offset, z+i
-      fill.call x+size+offset-1, z+i
     end
   end
   File.write 'areas.json', areas.to_json
   File.write "spigot/world/region/r.0.0.mca", world.encode
+  File.unlink 'area_users.json'
 end
-binding.pry
 gen_chunk arr, world
+binding.pry
