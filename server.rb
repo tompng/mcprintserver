@@ -183,7 +183,7 @@ class Server
       `kill -INT #{old_pid}` if old_pid > 0
       jarname = Dir.glob("spigot*.jar").first
       @io = IO.popen "java -Xms1024M -Xmx1024M -jar #{jarname} nogui", 'r+'
-      at_exit { @io.close }
+      at_exit { Process.kill :SIGKILL, @io.pid }
     end
     loop do
       s = @io.gets
@@ -388,14 +388,22 @@ get '/stl' do
   )
 end
 
+init_setting = -> {
+  server.command 'worldborder center 255 255'
+  server.command 'worldborder set 640 640'
+  server.command 'gamerule doDaylightCycle false'
+  server.command 'time set 6000'
+}
+
+get '/init' do
+  init_setting.call
+end
+
 set :bind, '0.0.0.0'
 
-server.command 'gamerule doDaylightCycle false'
-server.command 'time set 6000'
+init_setting.call
 regions.save
 server.rg_reload
-server.command 'worldborder center 255 255'
-server.command 'worldborder set 640 640'
 
 Thread.new{loop{server.command 'weather clear 1000000';sleep 3600}}
 Thread.new{Sinatra::Application.run!}
