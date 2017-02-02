@@ -24,8 +24,19 @@ stop(){
     kill -KILL `pgrep -f java`
   fi
 }
+status(){
+  if pgrep -f ruby.server.rb
+  then
+    echo "running"
+  else
+    echo "not running"
+    exit 3
+  fi
+}
 test $1 = "start" && start
 test $1 = "stop" && stop
+test $1 = "status" && status
+exit 0
 
 # sudo cp init.sh /etc/init.d/mcprintserver
 # sudo chmod +x /etc/init.d/mcprintserver
