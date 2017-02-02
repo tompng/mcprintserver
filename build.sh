@@ -35,4 +35,7 @@ curl -L 'https://dev.bukkit.org/projects/worldguard/files/latest' -H 'User-Agent
 cp ../server.properties server.properties
 
 cd ..
+mkdir spigot/world
+mkdir spigot/world/region
 ruby generate_world.rb
+ruby gen_map.rb
