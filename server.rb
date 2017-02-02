@@ -388,24 +388,14 @@ get '/stl' do
   )
 end
 
-init_setting = -> {
-  server.command 'worldborder center 255 255'
-  server.command 'worldborder set 640 640'
-  server.command 'gamerule doDaylightCycle false'
-  server.command 'time set 6000'
-}
-
-get '/init' do
-  init_setting.call
-end
-
 set :bind, '0.0.0.0'
 
-init_setting.call
 regions.save
 server.rg_reload
+server.command 'worldborder center 255 255'
+server.command 'worldborder set 640'
+server.command 'gamerule doDaylightCycle false'
+server.command 'time set 6000'
 
 Thread.new{loop{server.command 'weather clear 1000000';sleep 3600}}
-Thread.new{Sinatra::Application.run!}
-
-binding.pry
+Sinatra::Application.run!
