@@ -34,6 +34,7 @@ def image world
     else
       (map[x]||=[])[z]=[y,world[x,z,y], 0]
     end
+    world.instance_eval{@chunks[[x/16,z/16]]=nil} if x%16==15&&z%16==15
   end
   darkh = -> dh { 2/(1+Math.exp(-dh/16.0)) }
   size.times{|x|

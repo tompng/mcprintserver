@@ -388,6 +388,8 @@ get '/stl' do
   )
 end
 
+set :bind, '0.0.0.0'
+
 server.command 'worldborder center 255 255'
 server.command 'worldborder set 640 640'
 server.command 'gamerule doDaylightCycle false'
