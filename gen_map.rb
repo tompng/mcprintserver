@@ -35,12 +35,11 @@ def image world
       (map[x]||=[])[z]=[y,world[x,z,y], 0]
     end
   end
-  darkh = -> dh { Math.exp -dh/16.0 }
+  darkh = -> dh { 2/(1+Math.exp(-dh/16.0)) }
   size.times{|x|
-    prev=0
     size.times.reverse_each{|z|
       h, block,w = map[x][z]
-      br = darkh[prev - h]
+      br = darkh.call map[x][[z+2,size-1].min][0]+map[x][[z+1,size-1].min][0]-map[x][[z-1,0].max][0]-map[x][[z-2].max][0]
       rgb = color[block&.id||0, block&.data||0]
       r, g, b = rgb.map{|a|a*br}
       if w>0
@@ -57,8 +56,8 @@ def image world
       prev=h
     }
   }
-  img.save('mcmap.png')
-  img2.save('mcheight.png')
+  img.save('public/mcmap.png')
+  img2.save('public/mcheight.png')
 end
 
 # image load_world 'spigot/world/region/r.0.0_original.mca'
