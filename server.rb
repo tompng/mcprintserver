@@ -14,7 +14,7 @@ class Regions
     @areas.each do |area|
       cx = area['print']['min']['x']/16
       cz = area['print']['min']['z']/16
-      @area_users["#{cx}_#{cz}"]=[]
+      @area_users["#{cx}_#{cz}"]||=[]
     end
   end
 
@@ -115,7 +115,7 @@ class Regions
         min: min, max: max, owners: {groups: ['admins']}, priority: 2
       )
     }
-    if area_y != print_y-1
+    if area_y != print_y
       bedrocks.call :bed, border_min.merge('y' => area_y), border_max.merge('y' => print_y-1)
     end
     4.times do |i|

@@ -217,4 +217,3 @@ def gen_chunk arr, world
   File.unlink 'area_users.json'
 end
 gen_chunk arr, world
-binding.pry
