@@ -6,8 +6,8 @@ echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
 echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
 exec $SHELL -l
 git clone git://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build
-rbenv install 2.3.0
-rbenv global 2.3.0
+rbenv install 2.3.1
+rbenv global 2.3.1
 gem install bundler
 
 git clone https://github.com/tompng/mcprintserver.git
