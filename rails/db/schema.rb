@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170203143710) do
+ActiveRecord::Schema.define(version: 20170203144848) do
 
   create_table "areas", force: :cascade do |t|
     t.integer  "coord_i",    null: false
@@ -18,6 +18,12 @@ ActiveRecord::Schema.define(version: 20170203143710) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["coord_i", "coord_j"], name: "index_areas_on_coord_i_and_coord_j", unique: true
+  end
+
+  create_table "demo_accounts", force: :cascade do |t|
+    t.integer "area_id",  null: false
+    t.string  "username", null: false
+    t.index ["area_id"], name: "index_demo_accounts_on_area_id"
   end
 
 end

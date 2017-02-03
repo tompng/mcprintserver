@@ -1,4 +1,6 @@
 class Area < ActiveRecord::Base
+  has_many :demo_accounts, inverse_of: :area, dependent: :destroy
+
   def self.prepare
     coords = load_data.keys.map { |k| k.split('_') }
     areas = coords.map do |i, j|
