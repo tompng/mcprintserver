@@ -5,6 +5,7 @@ class AreasController < ApplicationController
   end
 
   def teleport
+    render nothing: true
   end
 
   def add_demo_account
