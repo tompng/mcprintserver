@@ -1,0 +1,16 @@
+#preview{
+  height: 512px;
+  position: relative;
+  overflow: hidden;
+  .loading{
+    left: 10%;
+    top: 10%;
+    position: absolute;
+  }
+  #preview_reload{
+    position: absolute;
+    right: 5px;
+    bottom: 5px;
+    background-color: rgba(255,255,255,0.5);
+  }
+}

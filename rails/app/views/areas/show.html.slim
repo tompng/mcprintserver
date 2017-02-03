@@ -8,7 +8,10 @@
 
 .mdl-grid
   .mdl-cell.mdl-cell--6-col
-    | preview here
+    #preview data-objfile=obj_area_path(@area)
+      .loading
+        .mdl-spinner.mdl-js-spinner.is-active
+      button.mdl-button.mdl-js-button.mdl-button--raised.mdl-js-ripple-effect#preview_reload data-objfile=obj_area_path(@area, cache: false) reload
   .mdl-cell.mdl-cell--6-col
     table.mdl-data-table.mdl-js-data-table.mdl-shadow--2dp.mdl-cell.mdl-cell--12-col
       thead

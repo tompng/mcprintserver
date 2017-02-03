@@ -3,6 +3,7 @@ Rails.application.routes.draw do
   root to: 'top#index'
   resources :areas, only: [:index, :show], param: :i_j do
     member do
+      get :obj
       post :teleport
       post :add_demo_account
       post :remove_demo_account

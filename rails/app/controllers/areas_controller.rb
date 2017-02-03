@@ -21,6 +21,11 @@ class AreasController < ApplicationController
     redirect_to @area
   end
 
+  def obj
+    url = "http://localhost:4567/obj?area_id=#{@area.to_param}"
+    render plain: Net::HTTP.get(URI.parse(url))
+  end
+
   private
 
   def set_area
