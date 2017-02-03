@@ -1,4 +1,5 @@
-button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent"
-  | Button
-- @areas.each do |area|
-  = link_to area.to_param, area, class: "mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent"
+
+#mcmap
+  .background style='background-image: url(http://localhost:4567/mcmap.png)'
+  - @areas.each do |area|
+    = link_to '', area, class: "area", style: "left: #{area.coord_i*100/32.0}%; top: #{area.coord_j*100/32.0}%"

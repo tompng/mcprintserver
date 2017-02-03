@@ -1,9 +1,10 @@
 .mdl-grid
-  .mdl-cell.mdl-cell--4-col
+  .mdl-cell.mdl-cell--2-col
     = link_to areas_path, class: "mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
       | 戻る
-  .mdl-cell.mdl-cell--6-col
-    b = "エリア#{@area.coord_i}-#{@area.coord_j}"
+  .mdl-cell.mdl-cell--8-col
+    center
+      b = "エリア#{@area.coord_i}-#{@area.coord_j}"
 
 .mdl-grid
   .mdl-cell.mdl-cell--6-col
@@ -32,8 +33,8 @@
             td
 
     = form_tag action: :add_demo_account, class: 'mdl-cell.mdl-cell--12-col' do
-      div.mdl-textfield.mdl-js-textfield.mdl-cell.mdl-cell--8-col
+      div.mdl-textfield.mdl-js-textfield.mdl-cell.mdl-cell--6-col
         input.mdl-textfield__input type='text' pattern='[a-zA-Z0-9_.-]+' name='username' id='username'
         label.mdl-textfield__label for='username' minecraft username
         span.mdl-textfield__error invalid username
-      input.mdl-button.mdl-js-button.mdl-button--raised.mdl-js-ripple-effect.mdl-button--colored.mdl-cell.mdl-cell--4-col type='submit' value='このエリアに追加'
+      input.mdl-button.mdl-js-button.mdl-button--raised.mdl-js-ripple-effect.mdl-button--colored.mdl-cell.mdl-cell--6-col type='submit' value='このエリアに追加'

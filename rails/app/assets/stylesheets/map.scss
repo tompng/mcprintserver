@@ -1,0 +1,28 @@
+#mcmap{
+  width: 640px;
+  height: 640px;
+  .background{
+    width: 100%;
+    height: 100%;
+    opacity: 0.8;
+    background-size: cover;
+  }
+  position: relative;
+  .area{
+    position: absolute;
+    width: 3.125%;
+    height: 3.125%;
+    &:before{
+      content: '';
+      position: absolute;
+      left: -40%;
+      top: -40%;
+      width: 180%;height: 180%;
+      background: rgba(0,0,255,0.2);
+      border-radius: 10%;
+    }
+    &:hover:before{
+      background: rgba(0,0,255,0.6);
+    }
+  }
+}
