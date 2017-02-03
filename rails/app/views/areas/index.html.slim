@@ -1,5 +1,5 @@
-
 #mcmap
   .background style='background-image: url(http://localhost:4567/mcmap.png)'
   - @areas.each do |area|
-    = link_to '', area, class: "area", style: "left: #{area.coord_i*100/32.0}%; top: #{area.coord_j*100/32.0}%"
+    = link_to area, class: "area", style: "left: #{area.coord_i*100/32.0}%; top: #{area.coord_j*100/32.0}%" do
+      = area.demo_accounts.empty? ? '' : "#{area.demo_accounts.size}/#{Area::USERS_PER_AREA}"

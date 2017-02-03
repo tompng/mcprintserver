@@ -14,3 +14,27 @@
 //= require jquery_ujs
 //= require turbolinks
 //= require_tree .
+
+$(function(){
+  $(document).on('turbolinks:load', function(){
+    var timer = setInterval(function(){
+      var $messages = $('.flash-messages')
+      if($messages.length==0){
+        clearInterval(timer)
+        return
+      }
+      $messages.each(function(){
+        var $el = $(this)
+        var time = $el.data('decay-started')
+        if(time===undefined)$el.data('decay-started', time=new Date())
+        var opacity=(time-new Date())/1000+4
+        if(opacity<0){
+          $el.remove()
+        }else{
+          $el.css({opacity: Math.min(opacity, 1)})
+        }
+      })
+    }, 10)
+  })
+
+})

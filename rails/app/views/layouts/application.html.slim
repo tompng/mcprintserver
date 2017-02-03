@@ -11,4 +11,7 @@ html
     = javascript_include_tag 'application', 'data-turbolinks-track': 'reload'
 
   body
+    - flash.each do |name, msg|
+      - if msg.is_a?(String)
+        div class="flash-messages flash-messages-#{name}" = msg
     = yield
