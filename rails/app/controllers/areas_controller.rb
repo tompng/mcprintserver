@@ -23,7 +23,7 @@ class AreasController < ApplicationController
 
   def obj
     url = "http://localhost:4567/obj?area_id=#{@area.to_param}"
-    render plain: Net::HTTP.get(URI.parse(url))
+    send_data Net::HTTP.get(URI.parse(url)), filename: "block_#{@area.to_param}.obj"
   end
 
   private

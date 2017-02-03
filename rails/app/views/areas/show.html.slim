@@ -1,6 +1,7 @@
 .mdl-grid
   .mdl-cell.mdl-cell--2-col
     = link_to areas_path, class: "mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+      i.material-icons reply
       | 戻る
   .mdl-cell.mdl-cell--8-col
     center
@@ -11,7 +12,21 @@
     #preview data-objfile=obj_area_path(@area)
       .loading
         .mdl-spinner.mdl-js-spinner.is-active
-      button.mdl-button.mdl-js-button.mdl-button--raised.mdl-js-ripple-effect#preview_reload data-objfile=obj_area_path(@area, cache: false) reload
+      .menu-buttons
+        button.mdl-button.mdl-js-button.mdl-button--raised.mdl-js-ripple-effect#preview_reload data-objfile=obj_area_path(@area, cache: false) reload
+        button.mdl-button.mdl-js-button#download_menu.mdl-js-ripple-effect
+          | Download
+        ul.mdl-menu.mdl-menu--top-right.mdl-js-menu.mdl-js-ripple-effect for="download_menu"
+          a href=obj_area_path(@area, cache: false, rand: rand)
+            li.mdl-menu__item
+              | Download OBJ
+          a href='/block.mtl' download='block.mtl'
+            li.mdl-menu__item
+              | Download MTL
+          a href='/texture.png' download='texture.png'
+            li.mdl-menu__item
+              | Download Texture
+
   .mdl-cell.mdl-cell--6-col
     table.mdl-data-table.mdl-js-data-table.mdl-shadow--2dp.mdl-cell.mdl-cell--12-col
       thead
