@@ -8,7 +8,7 @@ class Area < ActiveRecord::Base
   def add_demo_account name
     demo_accounts.where(username: name).first_or_create
     reload
-    demo_accounts.min_by(&:id).first.destroy if demo_accounts.count > 4
+    demo_accounts.min_by(&:id).destroy if demo_accounts.count > 4
   end
 
   def remove_demo_account name

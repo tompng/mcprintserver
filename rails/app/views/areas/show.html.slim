@@ -1,30 +1,39 @@
-button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent"
-  | Button
+.mdl-grid
+  .mdl-cell.mdl-cell--4-col
+    = link_to areas_path, class: "mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+      | 戻る
+  .mdl-cell.mdl-cell--6-col
+    b = "エリア#{@area.coord_i}-#{@area.coord_j}"
 
-table.mdl-data-table.mdl-js-data-table.mdl-shadow--2dp
-  thead
-    tr
-      th.mdl-data-table__cell--non-numeric username
-      th
-      th
-  tbody
-    - @area.demo_accounts.each do |account|
-      tr
-        td.mdl-data-table__cell--non-numeric = account.username
-        td
-          = link_to teleport_area_path(@area, username: account.username), remote: true, method: :post, class: 'mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect' do
-            | このエリアにテレポート
-        td
-          = link_to remove_demo_account_area_path(@area, username: account.username), method: :post, data: {confirm: '本当に削除しますか'}, class: 'mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent' do
-            i.material-icons delete
-    - @area.demo_accounts.empty?
-      tr
-        td なし
-        td
+.mdl-grid
+  .mdl-cell.mdl-cell--6-col
+    | preview here
+  .mdl-cell.mdl-cell--6-col
+    table.mdl-data-table.mdl-js-data-table.mdl-shadow--2dp.mdl-cell.mdl-cell--12-col
+      thead
+        tr
+          th.mdl-data-table__cell--non-numeric username
+          th
+          th
+      tbody
+        - @area.demo_accounts.sort_by(&:username).each do |account|
+          tr
+            td.mdl-data-table__cell--non-numeric = account.username
+            td
+              = link_to teleport_area_path(@area, username: account.username), remote: true, method: :post, class: 'mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect' do
+                | このエリアにテレポート
+            td
+              = link_to remove_demo_account_area_path(@area, username: account.username), method: :post, data: {confirm: '本当に削除しますか'}, class: 'mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent' do
+                i.material-icons delete
+        - if @area.demo_accounts.empty?
+          tr
+            td なし
+            td
+            td
 
-= form_tag action: :add_demo_account do
-  div.mdl-textfield.mdl-js-textfield
-    input.mdl-textfield__input type='text' pattern='[a-zA-Z0-9_.-]+' name='username' id='username'
-    label.mdl-textfield__label for='username' minecraft username
-    span.mdl-textfield__error invalid username
-  input.mdl-button.mdl-js-button.mdl-button--raised.mdl-js-ripple-effect.mdl-button--accent type='submit' value='このエリアに追加'
+    = form_tag action: :add_demo_account, class: 'mdl-cell.mdl-cell--12-col' do
+      div.mdl-textfield.mdl-js-textfield.mdl-cell.mdl-cell--8-col
+        input.mdl-textfield__input type='text' pattern='[a-zA-Z0-9_.-]+' name='username' id='username'
+        label.mdl-textfield__label for='username' minecraft username
+        span.mdl-textfield__error invalid username
+      input.mdl-button.mdl-js-button.mdl-button--raised.mdl-js-ripple-effect.mdl-button--colored.mdl-cell.mdl-cell--4-col type='submit' value='このエリアに追加'
