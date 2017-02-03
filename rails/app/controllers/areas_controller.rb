@@ -22,8 +22,13 @@ class AreasController < ApplicationController
   end
 
   def obj
-    url = "http://localhost:4567/obj?area_id=#{@area.to_param}"
-    send_data Net::HTTP.get(URI.parse(url)), filename: "block_#{@area.to_param}.obj"
+    if params[:cache].to_s == 'false' || @area.area_cached_obj.nil? || @area.area_cached_obj.updated_at < 10.minutes.ago
+      url = "http://localhost:4567/obj?area_id=#{@area.to_param}"
+      @area.area_cached_obj ||= AreaCachedObj.new
+      @area.area_cached_obj.obj_data = Net::HTTP.get URI.parse(url)
+      @area.area_cached_obj.save
+    end
+    send_data @area.area_cached_obj.obj_data, filename: "block_#{@area.to_param}.obj"
   end
 
   private

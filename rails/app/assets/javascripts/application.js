@@ -17,6 +17,12 @@
 
 $(function(){
   $(document).on('turbolinks:load', function(){
+    componentHandler.upgradeDom();
+  })
+})
+
+$(function(){
+  $(document).on('turbolinks:load', function(){
     var timer = setInterval(function(){
       var $messages = $('.flash-messages')
       if($messages.length==0){
@@ -36,5 +42,4 @@ $(function(){
       })
     }, 10)
   })
-
 })
