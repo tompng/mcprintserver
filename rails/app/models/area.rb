@@ -13,9 +13,10 @@ class Area < ActiveRecord::Base
 
 
   def self.prepare
-    coords = load_data.keys.map { |k| k.split('_') }
+    coords = load_data.keys.map { |k| k.split('_').map(&:to_i) }
+    existing_areas = Area.all.index_by { |a| [a.coord_i, a.coord_j] }
     areas = coords.map do |i, j|
-      Area.where(coord_i: i, coord_j: j).first_or_create
+      existing_areas[[i,j]] || Area.create(coord_i: i, coord_j: j)
     end
     Area.where.not(id: areas).destroy_all
   end
