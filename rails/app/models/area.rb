@@ -1,6 +1,10 @@
 class Area < ActiveRecord::Base
   has_many :demo_accounts, inverse_of: :area, dependent: :destroy
 
+  def to_param
+    "#{coord_i}_#{coord_j}"
+  end
+
   def add_demo_account name
     demo_accounts.where(username: name).first_or_create
     reload
@@ -10,7 +14,6 @@ class Area < ActiveRecord::Base
   def remove_demo_account name
     demo_accounts.where(username: name).destroy_all
   end
-
 
   def self.prepare
     coords = load_data.keys.map { |k| k.split('_').map(&:to_i) }

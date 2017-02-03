@@ -7,12 +7,12 @@ class AreasController < ApplicationController
   def teleport
   end
 
-  def add
+  def add_demo_account
     @area.add_demo_account params[:username]
     redirect_to @area
   end
 
-  def remove
+  def remove_demo_account
     @area.remove_demo_account params[:username]
     redirect_to @area
   end
@@ -20,6 +20,7 @@ class AreasController < ApplicationController
   private
 
   def set_area
-    @area = Area.find params[:id]
+    i, j = params[:i_j].split('_')
+    @area = Area.find_by! coord_i: i, coord_j: j
   end
 end
