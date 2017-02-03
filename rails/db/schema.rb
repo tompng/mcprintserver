@@ -23,6 +23,7 @@ ActiveRecord::Schema.define(version: 20170203144848) do
   create_table "demo_accounts", force: :cascade do |t|
     t.integer "area_id",  null: false
     t.string  "username", null: false
+    t.index ["area_id", "username"], name: "index_demo_accounts_on_area_id_and_username", unique: true
     t.index ["area_id"], name: "index_demo_accounts_on_area_id"
   end
 
