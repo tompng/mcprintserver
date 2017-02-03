@@ -1,5 +1,6 @@
 class Area < ActiveRecord::Base
   has_many :demo_accounts, inverse_of: :area, dependent: :destroy
+  has_one :area_cached_obj, inverse_of: :area, dependent: :destroy
   USERS_PER_AREA = 4
 
   def to_param
