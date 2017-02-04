@@ -328,6 +328,8 @@ user_list_update_op = lambda do |user_list|
     [area_id, user_ids.select { |user_id| valid_user_id? user_id }]
   }.to_h
   regions.update area_users
+  regions.save
+  server.rg_reload
 end
 
 user_list_op = lambda do |area_id, user_id, add:|
