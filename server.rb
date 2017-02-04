@@ -5,6 +5,7 @@ require 'json'
 require 'sinatra'
 require 'yaml'
 require 'timeout'
+require 'net/http'
 require './stl_extract'
 require './obj_extract/obj_extract'
 class Regions
@@ -316,6 +317,19 @@ def valid_user_id? user_id
   user_id =~ /\A[a-zA-Z0-9_-]+\z/
 end
 
+rails_info = JSON.parse File.read('rails.json') rescue {}
+validates_token = ->(params){
+  next unless rails_info.key? 'token'
+  raise 'unauthorized' unless params[:_token] == rails_info['token']
+}
+
+user_list_update_op = lambda do |user_list|
+  area_users = user_list.map { |area_id, user_ids|
+    [area_id, user_ids.select { |user_id| valid_user_id? user_id }]
+  }.to_h
+  regions.update area_users
+end
+
 user_list_op = lambda do |area_id, user_id, add:|
   next unless valid_user_id? user_id
   users = regions.area_users[area_id]
@@ -330,9 +344,27 @@ user_list_op = lambda do |area_id, user_id, add:|
   server.rg_reload
 end
 
+if rails_info.key? 'fetch_url'
+  begin
+    user_list = JSON.parse Net::HTTP.get(URI.parse(rails_info['fetch_url']))
+    user_list_update_op.call user_list
+  rescue => e
+    p e
+  end
+end
+
+post '/register' do
+  validates_token.call params
+  rails_info['token'] = params[:_token]
+  rails_info['fetch_url'] = params[:fetch_url]
+  File.write 'rails.json', rails_info.to_json
+  nil
+end
+
 post '/tp' do
+  validates_token.call params
   user_id = params[:user_id]
-  next unless valid_user_id user_id
+  next unless valid_user_id? user_id
   pos = regions.area_position params[:area_id]
   server.tp user_id, pos if pos
   content_type :json
@@ -340,33 +372,34 @@ post '/tp' do
 end
 
 get '/user_list' do
+  validates_token.call params
   content_type :json
   regions.area_users.to_json
 end
 
 post '/user_list' do
-  area_users = {}
-  params[:user_list].each do |key, value|
-    area_users[key] = values.map { |user_id| valid_user_id? user_id }
-  end
-  regions.update area_users
+  validates_token.call params
+  user_list_update_op.call params[:user_list]
   content_type :json
   regions.area_users.to_json
 end
 
 post '/user_list_add' do
+  validates_token.call params
   user_list_op.call params[:area_id], params[:user_id], add: true
   content_type :json
   regions.area_users.to_json
 end
 
 post '/user_list_remove' do
+  validates_token.call params
   user_list_op.call params[:area_id], params[:user_id], add: false
   content_type :json
   regions.area_users.to_json
 end
 
 get '/obj' do
+  validates_token.call params
   area = regions.area params[:area_id]
   next unless area
   server.save
@@ -378,6 +411,7 @@ get '/obj' do
 end
 
 get '/stl' do
+  validates_token.call params
   area = regions.area params[:area_id]
   next unless area
   server.save

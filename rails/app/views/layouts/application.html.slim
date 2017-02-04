@@ -1,0 +1,19 @@
+doctype html
+html
+  head
+    title Mcprint
+    = csrf_meta_tags
+
+    meta name="turbolinks-cache-control" content="no-cache"
+    link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css"
+    script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r79/three.js'
+    script defer=true src="https://code.getmdl.io/1.3.0/material.min.js"
+    = stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload'
+    = javascript_include_tag 'application', 'data-turbolinks-track': 'reload'
+
+  body
+    - flash.each do |name, msg|
+      - if msg.is_a?(String)
+        div class="flash-messages flash-messages-#{name}" = msg
+    = yield

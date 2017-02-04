@@ -1,0 +1,97 @@
+.mdl-grid
+  .mdl-cell.mdl-cell--2-col
+    = link_to areas_path, class: "mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+      i.material-icons reply
+      | 戻る
+  .mdl-cell.mdl-cell--8-col
+    center
+      b Area #{@area.to_param}
+
+.mdl-grid
+  .mdl-cell.mdl-cell--6-col
+    #preview.left-panel data-objfile=obj_area_path(@area)
+      .loading
+        .mdl-spinner.mdl-js-spinner.is-active
+      .menu-buttons
+        button.mdl-button.mdl-js-button.mdl-js-ripple-effect#preview_reload data-objfile=obj_area_path(@area, cache: false) reload
+        button.mdl-button.mdl-js-button#download_menu.mdl-js-ripple-effect
+          | Download
+        ul.mdl-menu.mdl-menu--top-right.mdl-js-menu.mdl-js-ripple-effect for="download_menu"
+          a href=obj_area_path(@area, cache: false, rand: rand)
+            li.mdl-menu__item
+              | Download OBJ
+          a href='/block.mtl' download='block.mtl'
+            li.mdl-menu__item
+              | Download MTL
+          a href='/texture.png' download='texture.png'
+            li.mdl-menu__item
+              | Download Texture
+
+  .mdl-cell.mdl-cell--6-col.right-panel
+    table.mdl-data-table.mdl-js-data-table.mdl-shadow--2dp.mdl-cell.mdl-cell--12-col
+      thead
+        tr
+          th.mdl-data-table__cell--non-numeric username
+          th
+          th
+      tbody
+        - @area.demo_accounts.sort_by(&:username).each do |account|
+          tr
+            td.mdl-data-table__cell--non-numeric = account.username
+            td
+              = link_to teleport_area_path(@area, username: account.username), remote: true, method: :post, class: 'mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect' do
+                | このエリアにテレポート
+            td
+              = link_to remove_demo_account_area_path(@area, username: account.username), method: :post, data: {confirm: '本当に削除しますか'}, class: 'mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent' do
+                i.material-icons delete
+        - if @area.demo_accounts.empty?
+          tr
+            td 遊ぶ前にあなたのusernameをこのエリアに追加してください
+            td
+            td
+
+    = form_tag action: :add_demo_account, class: 'mdl-cell.mdl-cell--12-col' do
+      div.mdl-textfield.mdl-js-textfield.mdl-cell.mdl-cell--6-col
+        input.mdl-textfield__input type='text' pattern='[a-zA-Z0-9_.-]+' name='username' id='username'
+        label.mdl-textfield__label for='username' minecraft username
+        span.mdl-textfield__error invalid username
+      input.mdl-button.mdl-js-button.mdl-button--raised.mdl-js-ripple-effect.mdl-button--colored.mdl-cell.mdl-cell--6-col type='submit' value='このエリアに追加'
+
+    .howto
+      button.mdl-button.mdl-js-button.mdl-button--raised#play
+        | このエリアで遊ぶ
+
+dialog.mdl-dialog#play_dialog
+  h4.mdl-dialog__title このエリアで遊ぶ
+  .mdl-dialog__content
+    | サーバアドレスは
+    input.server-ip value=Mcapi.ip readonly=true
+    | です
+    br
+    br
+    - if @area.usernames.present?
+      div
+        | このエリアで遊べるユーザ:
+        - @area.usernames.each do |name|
+          span.username = name
+      | この中にあなたのユーザ名がない場合は追加してください
+      br
+    - else
+      | まず、あなたのマインクラフトのusernameをこのエリアに追加してください
+
+
+  .mdl-dialog__actions
+    button.mdl-button.mdl-js-button.mdl-button--raised.mdl-js-ripple-effect.mdl-button--colored.close type="button"  OK
+
+javascript:
+  var dialog = document.querySelector('dialog');
+  var showDialogButton = document.querySelector('#play');
+  if (! dialog.showModal) {
+    dialogPolyfill.registerDialog(dialog);
+  }
+  showDialogButton.addEventListener('click', function() {
+    dialog.showModal();
+  });
+  dialog.querySelector('.close').addEventListener('click', function() {
+    dialog.close();
+  });
