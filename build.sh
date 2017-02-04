@@ -44,3 +44,8 @@ mkdir spigot/world
 mkdir spigot/world/region
 ruby generate_world.rb
 ruby gen_map.rb
+
+sudo cp init.sh /etc/init.d/mcprintserver
+sudo chmod +x /etc/init.d/mcprintserver
+sudo chkconfig --add mcprintserver
+echo "*/5 * * * * service mcprintserver start" | crontab
