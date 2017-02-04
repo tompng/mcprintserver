@@ -364,10 +364,11 @@ post '/register' do
 end
 
 post '/tp' do
-  validates_token.call params
-  user_id = params[:user_id]
+  json = JSON.parse request.body.read
+  validates_token.call _token: json['_token']
+  user_id = json['user_id']
   next unless valid_user_id? user_id
-  pos = regions.area_position params[:area_id]
+  pos = regions.area_position json['area_id']
   server.tp user_id, pos if pos
   content_type :json
   pos.to_json
@@ -380,9 +381,9 @@ get '/user_list' do
 end
 
 post '/user_list' do
-  params = JSON.parse request.body.read
-  validates_token.call params
-  user_list_update_op.call params[:user_list]
+  json = JSON.parse request.body.read
+  validates_token.call _token: json['_token']
+  user_list_update_op.call json['user_list']
   content_type :json
   regions.area_users.to_json
 end
