@@ -1,11 +1,12 @@
 .mcmap-container{
   margin-left: auto;
   margin-right: auto;
-  width: 640px;
+  width: 512px;
+  margin-bottom: 40px;
   .search-field{width: 100%;}
   #mcmap{
-    width: 640px;
-    height: 640px;
+    width: 512px;
+    height: 512px;
     .background{
       width: 100%;
       height: 100%;
