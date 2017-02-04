@@ -47,6 +47,10 @@ class Mcapi
   end
 
   def self.api_post path, params={}
-    Net::HTTP.post URI.parse(endpoint(path)), params.merge(_token: token).to_param
+    Net::HTTP.post(
+      URI.parse(endpoint(path)),
+      params.merge(_token: token).to_json,
+      content_type: 'application/json'
+    )
   end
 end

@@ -380,6 +380,7 @@ get '/user_list' do
 end
 
 post '/user_list' do
+  params = JSON.parse request.body.read
   validates_token.call params
   user_list_update_op.call params[:user_list]
   content_type :json
