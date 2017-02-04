@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   resources :areas, only: [:index, :show], param: :i_j do
     collection do
       get :mcmap
+      get :user_list
     end
     member do
       get :obj

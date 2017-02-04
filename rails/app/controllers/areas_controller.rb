@@ -1,5 +1,5 @@
 class AreasController < ApplicationController
-  before_action :set_area, except: [:index, :mcmap]
+  before_action :set_area, except: [:index, :mcmap, :user_list]
   def index
     @areas = Area.includes(:demo_accounts)
   end
@@ -23,8 +23,12 @@ class AreasController < ApplicationController
     redirect_to @area
   end
 
+  def user_list
+    render json: Area.user_list
+  end
+
   def mcmap
-    send_data Mcapi.mcmap
+    send_data Mcapi.mcmap, disposition: 'inline', type: 'image/png'
   end
 
   def obj

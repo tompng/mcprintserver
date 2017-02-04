@@ -17,11 +17,23 @@ class Area < ActiveRecord::Base
     user_accounts.shift.destroy while user_accounts.size > 1
     area_accounts = reload.demo_accounts.order(id: :asc).to_a
     area_accounts.shift.destroy while area_accounts.size > USERS_PER_AREA
+    Area.notify_update
     demo_account
   end
 
   def remove_demo_account name
     demo_accounts.where(username: name).destroy_all
+    Area.notify_update
+  end
+
+  def self.user_list
+    Area.includes(:demo_accounts).map { |a|
+      [a.to_param, a.usernames]
+    }.sort_by(&:first).to_h
+  end
+
+  def self.notify_update
+    Mcapi.update_user_list user_list
   end
 
   def self.prepare
