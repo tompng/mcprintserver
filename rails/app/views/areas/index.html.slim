@@ -4,7 +4,7 @@
     input.mdl-textfield__input#keyword_search type='text'
     label.mdl-textfield__label for='keyword_search' search by area_id(xx_yy) or username
   #mcmap
-    .background style='background-image: url(http://localhost:4567/mcmap.png)'
+    .background style='background-image: url(/areas/mcmap)'
     - @areas.each do |area|
       - data = { area_id: area.to_param, keywords: area.usernames.join(' ') }
       - style = "left: #{area.coord_i*100/32.0}%; top: #{area.coord_j*100/32.0}%"

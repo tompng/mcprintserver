@@ -25,15 +25,11 @@ class Area < ActiveRecord::Base
   end
 
   def self.prepare
-    coords = load_data.keys.map { |k| k.split('_').map(&:to_i) }
+    coords = Mcapi.user_list.keys.map { |k| k.split('_').map(&:to_i) }
     existing_areas = Area.all.index_by { |a| [a.coord_i, a.coord_j] }
     areas = coords.map do |i, j|
       existing_areas[[i,j]] || Area.create(coord_i: i, coord_j: j)
     end
     Area.where.not(id: areas).destroy_all
-  end
-
-  def self.load_data
-    JSON.parse Net::HTTP.get URI.parse('http://localhost:4567/user_list')
   end
 end

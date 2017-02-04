@@ -1,5 +1,5 @@
 class AreasController < ApplicationController
-  before_action :set_area, except: :index
+  before_action :set_area, except: [:index, :mcmap]
   def index
     @areas = Area.includes(:demo_accounts)
   end
@@ -22,11 +22,14 @@ class AreasController < ApplicationController
     redirect_to @area
   end
 
+  def mcmap
+    send_data Mcapi.mcmap
+  end
+
   def obj
     if params[:cache].to_s == 'false' || @area.area_cached_obj.nil? || @area.area_cached_obj.updated_at < 10.minutes.ago
-      url = "http://localhost:4567/obj?area_id=#{@area.to_param}"
       @area.area_cached_obj ||= AreaCachedObj.new
-      @area.area_cached_obj.obj_data = Net::HTTP.get URI.parse(url)
+      @area.area_cached_obj.obj_data = Mcapi.objfile @area.coord_i, @area.coord_j
       @area.area_cached_obj.save
     end
     send_data @area.area_cached_obj.obj_data, filename: "block_#{@area.to_param}.obj"
