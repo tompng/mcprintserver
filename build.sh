@@ -48,4 +48,4 @@ ruby gen_map.rb
 sudo cp init.sh /etc/init.d/mcprintserver
 sudo chmod +x /etc/init.d/mcprintserver
 sudo chkconfig --add mcprintserver
-echo "*/5 * * * * /sbin/service mcprintserver start" | crontab
+(echo 'MAILTO=""';echo "*/5 * * * * /sbin/service mcprintserver start") | crontab
