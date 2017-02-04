@@ -60,10 +60,10 @@ h4.mdl-grid
 
     .howto
       button.mdl-button.mdl-js-button.mdl-button--raised#play
-        | このエリアで遊ぶ
+        | このエリアで建築する
 
 dialog.mdl-dialog#play_dialog
-  h4.mdl-dialog__title このエリアで遊ぶ
+  h4.mdl-dialog__title このエリアで建築する
   .mdl-dialog__content
     | サーバアドレスは
     input.server-ip value=Mcapi.ip readonly=true
@@ -72,7 +72,7 @@ dialog.mdl-dialog#play_dialog
     br
     - if @area.usernames.present?
       div
-        | このエリアで遊べるユーザ:
+        | このエリアで建築できるユーザ:
         - @area.usernames.each do |name|
           span.username = name
       | この中にあなたのユーザ名がない場合は追加してください
