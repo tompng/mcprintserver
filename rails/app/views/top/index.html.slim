@@ -7,5 +7,16 @@
     .title.main-title MC PRINT
     .title.sub-title マインクラフトで遊んだあとは、3Dプリンタで印刷
 center
+  .mdl-tabs.mdl-js-tabs.mdl-js-ripple-effect
+    .mdl-tabs__tab-bar
+      a.mdl-tabs__tab.is-active href="#step1"  1.エリアを選ぶ
+      a.mdl-tabs__tab href="#step2"  2.建築
+      a.mdl-tabs__tab href="#step3"  3.ダウンロード
+    #step1.howto-step.mdl-tabs__panel.is-active
+      | 建築するエリアを選ぶ
+    #step2.howto-step.mdl-tabs__panel
+      | ワールドに入り、枠内に建築
+    #step3.howto-step.mdl-tabs__panel
+      | 3Dデータをダウンロード
   = link_to areas_path, class: 'mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored getting-started-button'
     | 始める
