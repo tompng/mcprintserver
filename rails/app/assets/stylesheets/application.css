@@ -13,7 +13,9 @@
  *= require_tree .
  *= require_self
  */
-
+body{
+  background: #eeefee;
+}
 .flash-messages{
   position: fixed;
   left: 5px;

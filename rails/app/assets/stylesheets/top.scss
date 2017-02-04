@@ -1,0 +1,40 @@
+.cube{
+  position: relative;
+  svg{width: 100%;position:absolute;left:0;top:0;height:100%;}
+}
+.top-header{
+  width: 100%;
+  max-width: 800px;
+  height: 260px;
+  margin: 0 auto;
+  position: relative;
+  .icon{
+    position: absolute;
+    left:0;top:0;
+    width: 260px;
+    height: 260px;
+    position: relative;
+    .cube{position:absolute;}
+    .cube:nth-child(1){left:0px;top:0px;width:120px;height:120px;}
+    .cube:nth-child(2){left:120px;top:40px;width:160px;height:160px;}
+    .cube:nth-child(3){left:20px;top:120px;width:140px;height:140px;}
+  }
+  .title{
+    position: absolute;
+    color: #88a;
+  }
+  .main-title{
+    left: 300px;
+    top: 20px;
+    font-size: 64px;
+  }
+  .sub-title{
+    left: 300px;
+    top: 200px;
+    font-size: 20px;
+  }
+}
+.getting-started-button{
+  padding: 0.5em 2em;
+  font-size: 1.5em;
+}
