@@ -1,11 +1,12 @@
-.mdl-grid
+h4.mdl-grid
   .mdl-cell.mdl-cell--2-col
     = link_to areas_path, class: "mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
       i.material-icons reply
       | 戻る
   .mdl-cell.mdl-cell--8-col
     center
-      b Area #{@area.to_param}
+      .cube data-color={r:0.6,g:0.7,b:1}.to_json style='width:36px;height:36px;'
+      | エリア #{@area.to_param}
 
 .mdl-grid
   .mdl-cell.mdl-cell--6-col

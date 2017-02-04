@@ -1,5 +1,7 @@
 .cube{
   position: relative;
+  display:inline-block;
+  vertical-align: bottom;
   svg{width: 100%;position:absolute;left:0;top:0;height:100%;}
 }
 .top-header{

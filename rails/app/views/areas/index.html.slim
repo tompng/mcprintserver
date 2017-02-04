@@ -1,5 +1,14 @@
+h4.mdl-grid
+  .mdl-cell.mdl-cell--2-col
+    = link_to root_path, class: "mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+      i.material-icons reply
+      | 戻る
+  .mdl-cell.mdl-cell--8-col
+    center
+      .cube data-color={r:0.6,g:0.7,b:1}.to_json style='width:36px;height:36px;'
+      | エリアを選んでください
+
 .mcmap-container
-  h4 エリアを選んでください
   .search-field.mdl-textfield.mdl-js-textfield.mdl-textfield--floating-label
     input.mdl-textfield__input#keyword_search type='text'
     label.mdl-textfield__label for='keyword_search' search by area_id(xx_yy) or username
