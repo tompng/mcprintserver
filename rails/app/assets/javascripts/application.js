@@ -43,3 +43,11 @@ $(function(){
     }, 10)
   })
 })
+
+$(function(){
+  $(document).on('click', 'input[readonly]', function(){
+    if(this.select)this.select()
+    if(this.setSelectionRange)this.setSelectionRange(0, this.value.length)
+  })
+
+})

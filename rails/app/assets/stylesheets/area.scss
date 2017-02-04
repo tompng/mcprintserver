@@ -1,5 +1,37 @@
+.left-panel, .right-panel{
+  position: relative;
+  height: 640px;
+}
+.right-panel .howto{
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  #play{
+    width: 100%;
+    font-size: 1.5em;
+    height :4em;
+  }
+}
+#play_dialog{
+  width: 50vw;
+  .mdl-dialog__content{
+    font-size: 18px;
+    line-height: 1.2em;
+  }
+  span.username{
+    font-style: italic;
+    margin-left: 5px;
+    margin-right: 5px;
+  }
+  input.server-ip{
+    font-size: 18px;
+    text-align: center;
+    border: none;
+    color: gray;
+  }
+}
 #preview{
-  height: 512px;
   position: relative;
   overflow: hidden;
   .loading{

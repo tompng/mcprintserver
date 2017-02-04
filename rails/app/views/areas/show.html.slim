@@ -9,7 +9,7 @@
 
 .mdl-grid
   .mdl-cell.mdl-cell--6-col
-    #preview data-objfile=obj_area_path(@area)
+    #preview.left-panel data-objfile=obj_area_path(@area)
       .loading
         .mdl-spinner.mdl-js-spinner.is-active
       .menu-buttons
@@ -27,7 +27,7 @@
             li.mdl-menu__item
               | Download Texture
 
-  .mdl-cell.mdl-cell--6-col
+  .mdl-cell.mdl-cell--6-col.right-panel
     table.mdl-data-table.mdl-js-data-table.mdl-shadow--2dp.mdl-cell.mdl-cell--12-col
       thead
         tr
@@ -46,7 +46,7 @@
                 i.material-icons delete
         - if @area.demo_accounts.empty?
           tr
-            td なし
+            td 遊ぶ前にあなたのusernameをこのエリアに追加してください
             td
             td
 
@@ -56,3 +56,42 @@
         label.mdl-textfield__label for='username' minecraft username
         span.mdl-textfield__error invalid username
       input.mdl-button.mdl-js-button.mdl-button--raised.mdl-js-ripple-effect.mdl-button--colored.mdl-cell.mdl-cell--6-col type='submit' value='このエリアに追加'
+
+    .howto
+      button.mdl-button.mdl-js-button.mdl-button--raised#play
+        | このエリアで遊ぶ
+
+dialog.mdl-dialog#play_dialog
+  h4.mdl-dialog__title このエリアで遊ぶ
+  .mdl-dialog__content
+    | サーバアドレスは
+    input.server-ip value=Mcapi.ip readonly=true
+    | です
+    br
+    br
+    - if @area.usernames.present?
+      div
+        | このエリアで遊べるユーザ:
+        - @area.usernames.each do |name|
+          span.username = name
+      | この中にあなたのユーザ名がない場合は追加してください
+      br
+    - else
+      | まず、あなたのマインクラフトのusernameをこのエリアに追加してください
+
+
+  .mdl-dialog__actions
+    button.mdl-button.mdl-js-button.mdl-button--raised.mdl-js-ripple-effect.mdl-button--colored.close type="button"  OK
+
+javascript:
+  var dialog = document.querySelector('dialog');
+  var showDialogButton = document.querySelector('#play');
+  if (! dialog.showModal) {
+    dialogPolyfill.registerDialog(dialog);
+  }
+  showDialogButton.addEventListener('click', function() {
+    dialog.showModal();
+  });
+  dialog.querySelector('.close').addEventListener('click', function() {
+    dialog.close();
+  });

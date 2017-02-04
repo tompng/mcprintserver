@@ -36,6 +36,7 @@ class AreasController < ApplicationController
       @area.area_cached_obj ||= AreaCachedObj.new
       @area.area_cached_obj.obj_data = Mcapi.objfile @area.coord_i, @area.coord_j
       @area.area_cached_obj.save
+      @area.area_cached_obj.touch
     end
     send_data @area.area_cached_obj.obj_data, filename: "block_#{@area.to_param}.obj"
   end
