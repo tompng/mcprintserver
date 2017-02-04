@@ -18,6 +18,10 @@ class Mcapi
     JSON.parse api_get('user_list')
   end
 
+  def self.teleport area_id:, username:
+    api_post 'tp', area_id: area_id, user_id: username
+  end
+
   def self.mcmap
     @map ||= api_get 'mcmap.png'
   end
@@ -27,7 +31,12 @@ class Mcapi
 
   private
 
-  def self.api_get path
+  def self.api_get path, params={}
+    path += "?#{params.to_param}" if params.present?
     Net::HTTP.get URI.parse(endpoint(path))
+  end
+
+  def self.api_post path, params={}
+    Net::HTTP.post URI.parse(endpoint(path)), params.to_param
   end
 end

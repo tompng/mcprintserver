@@ -5,6 +5,7 @@ class AreasController < ApplicationController
   end
 
   def teleport
+    Mcapi.teleport area_id: @area.to_param, username: params[:username]
     render nothing: true
   end
 
