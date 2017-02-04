@@ -7,6 +7,10 @@ class Area < ActiveRecord::Base
     "#{coord_i}_#{coord_j}"
   end
 
+  def usernames
+    demo_accounts.map &:username
+  end
+
   def add_demo_account name
     demo_account = demo_accounts.where(username: name).first_or_create
     user_accounts = DemoAccount.where(username: name).order(id: :asc).to_a
