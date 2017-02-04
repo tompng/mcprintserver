@@ -17,7 +17,7 @@
 
 $(function(){
   $(document).on('turbolinks:load', function(){
-    componentHandler.upgradeDom();
+    componentHandler.upgradeDom()
   })
 })
 
