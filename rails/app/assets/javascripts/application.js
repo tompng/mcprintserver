@@ -49,5 +49,26 @@ $(function(){
     if(this.select)this.select()
     if(this.setSelectionRange)this.setSelectionRange(0, this.value.length)
   })
+})
 
+$(function(){
+  var cnt=0
+  function run(){
+    cnt++
+    if(cnt%10==0)setTimeout(run,3000)
+    else setTimeout(run, 32)
+    var phase = cnt%10/10
+    var page = Math.floor(cnt/10)
+    $('.slides').each(function(){
+      var $el = $(this)
+      var $slides = $el.find('.slide')
+      $slides.css({display:'none'})
+      $prev = $slides.eq((page-1)%$slides.length)
+      $current = $slides.eq(page%$slides.length)
+      $prev.css({display:'block',zIndex:'',opacity:1-phase})
+      $current.css({display:'block',zIndex:1,opacity:phase})
+      // $slides.empty().text(page+':'+phase)
+    })
+  }
+  run()
 })

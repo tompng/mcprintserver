@@ -4,6 +4,16 @@
   vertical-align: bottom;
   svg{width: 100%;position:absolute;left:0;top:0;height:100%;}
 }
+.slides{
+  position: relative;
+  width: 640px;
+  height: 320px;
+  .slide{
+    text-align: center;
+    position: absolute;
+    left:0;right:0;top:0;bottom:0;
+  }
+}
 .top-header{
   width: 100%;
   max-width: 800px;
@@ -42,5 +52,5 @@
 }
 .howto-step{
   margin-top: 20px;
-  height: 200px;
+  height: 320px;
 }

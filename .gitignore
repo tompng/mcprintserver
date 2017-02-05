@@ -1,6 +1,8 @@
 spigot
 spigot_build
-*.png
+tmp.png
+public/*.png
+obj_extract/texture.png
 *.json
 *.obj
 *.stl

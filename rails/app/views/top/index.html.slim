@@ -13,10 +13,31 @@ center style='margin-bottom: 40px;'
       a.mdl-tabs__tab href="#step2"  2.建築
       a.mdl-tabs__tab href="#step3"  3.ダウンロード
     #step1.howto-step.mdl-tabs__panel.is-active
-      | 建築するエリアを選ぶ
+      .slides
+        .slide
+          div 建築するエリアを選び
+          = image_tag 'description/area', width: 480
+        .slide style='display:none'
+          div 自分のマインクラフトのユーザ名を追加
+          = image_tag 'description/add', width: 480
     #step2.howto-step.mdl-tabs__panel
-      | ワールドに入り、枠内に建築
+      .slides
+        .slide
+          div サーバにログイン
+          = image_tag 'description/server', width: 480
+        .slide style='display:none'
+          div サーバにログイン
+          = image_tag 'description/login', width: 480
+        .slide style='display:none'
+          div 枠の中に建築
+          = image_tag 'description/build', width: 480
     #step3.howto-step.mdl-tabs__panel
-      | 3Dデータをダウンロード
+      .slides
+        .slide
+          div Reloadを押して最新版をプレビュー
+          = image_tag 'description/preview', width: 480
+        .slide style='display:none'
+          div 3Dデータをダウンロード
+          = image_tag 'description/download', width: 480
   = link_to areas_path, class: 'mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored getting-started-button'
     | 始める
