@@ -43,8 +43,11 @@ h4.mdl-grid
             tr
               td.mdl-data-table__cell--non-numeric = account.username
               td
-                = link_to teleport_area_path(@area, username: account.username), remote: true, method: :post, class: 'mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect' do
+                = link_to teleport_area_path(@area, username: account.username), remote: true, method: :post, class: 'mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect', id: "user_#{account.username}" do
                   | このエリアにテレポート
+                  .mdl-tooltip data-mdl-for="user_#{account.username}"
+                    div ワールド内で迷子になった時に
+                    div クリックしてください
               td
                 = link_to remove_demo_account_area_path(@area, username: account.username), method: :post, data: {confirm: '本当に削除しますか'}, class: 'mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent' do
                   i.material-icons delete
