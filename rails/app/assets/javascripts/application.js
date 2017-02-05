@@ -67,7 +67,6 @@ $(function(){
       $current = $slides.eq(page%$slides.length)
       $prev.css({display:'block',zIndex:'',opacity:1-phase})
       $current.css({display:'block',zIndex:1,opacity:phase})
-      // $slides.empty().text(page+':'+phase)
     })
   }
   run()
